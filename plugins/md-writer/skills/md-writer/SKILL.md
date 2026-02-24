@@ -48,8 +48,6 @@ Use `refs` for external links that informed the document.
 
 ## Document Structure
 
-Use this structure for all documents:
-
 ```markdown
 ---
 (frontmatter)
@@ -59,28 +57,20 @@ Use this structure for all documents:
 
 > Brief summary or purpose statement.
 
-## Table of Contents
-
-(for documents with 3+ sections)
+## Table of Contents (when 3+ sections)
 
 ---
 
-## Section One
-
-Content here.
-
-## Section Two
-
-Content here.
+## Sections…
 
 ---
 
 ## Additional Resources
 
-- [Link](https://example.com)
+- [Link](URL)
 ```
 
-The H1 heading MUST match the frontmatter `title`.
+H1 heading MUST match the frontmatter `title`.
 
 ## Diagrams — Mermaid Only
 
@@ -101,69 +91,23 @@ Common diagram types (not exhaustive — use any valid Mermaid type):
 
 Always wrap in a fenced code block with `mermaid` language identifier.
 
-## Markdownlint Rules
+## Formatting & Lint Rules
 
-**IMPORTANT:** Before writing, check if the project has a `.markdownlint.json` (or `.markdownlint.jsonc`,
-`.markdownlint.yaml`, `.markdownlint.yml`) in the repository root or near the target file. If found, read it
-and follow those rules instead of the defaults below. The project config always takes precedence.
+A PostToolUse hook enforces markdownlint after every Write/Edit — fix reported violations immediately.
+If your project has a custom `.markdownlint.json`, the hook uses it automatically.
 
-**Default rules** (used when no project config exists):
+**Line length: 120 chars max.** Code blocks and tables are exempt. Break long prose into multiple lines.
 
-| Rule | Requirement |
-| --- | --- |
-| MD001 | Heading levels increment by one |
-| MD003 | ATX heading style (`#`) |
-| MD009 | No trailing spaces |
-| MD010 | No hard tabs |
-| MD012 | No multiple consecutive blank lines |
-| MD013 | Line length max 120 chars (code blocks exempt) |
-| MD022 | Blank line before and after headings |
-| MD023 | Headings start at beginning of line |
-| MD025 | Single top-level heading per file |
-| MD031 | Blank line around fenced code blocks |
-| MD032 | Blank line around lists |
-| MD033 | No inline HTML |
-| MD040 | Code blocks must specify language |
-| MD041 | First line must be top-level heading (frontmatter `title` satisfies this) |
-| MD046 | Code block style: fenced |
-| MD047 | File ends with single newline |
-| MD048 | Fence style: backtick |
-| MD049 | Emphasis: `*italic*` |
-| MD050 | Strong: `**bold**` |
-| MD060 | Table style: compact (single space padding) |
+**No inline HTML** — use markdown equivalents only.
 
-## Formatting Rules
+**Headings:** ATX style (`#`), max 4 levels, no trailing punctuation.
 
-**Headings:**
+**Code blocks:** fenced with backticks, always specify language: `typescript`, `javascript`, `json`,
+`bash`, `yaml`, `markdown`, `mermaid`, `python`, `go`, `sql`, `tsx`, `css`, `html`, etc.
 
-- ATX style only (`#`, `##`, `###`, `####`)
-- Max depth: 4 levels
-- Blank line before and after every heading
-- No trailing punctuation
+**Lists:** `-` for unordered, `1.` for ordered, 2-space indent for nesting.
 
-**Code blocks:**
-
-- Always fenced with triple backticks
-- Always specify language: `typescript`, `javascript`, `json`, `bash`, `yaml`,
-  `markdown`, `mermaid`, `python`, `go`, `sql`, `tsx`, `css`, `html`
-
-**Lists:**
-
-- Unordered: `-` (hyphen), not `*` or `+`
-- Ordered: `1.` for every item (let the renderer auto-number)
-- Blank line before and after list blocks
-- Indent nested lists with 2 spaces
-
-**Tables:**
-
-- Header separator row required
-- Surround with blank lines
-- **Single space** between cell content and pipes — no extra padding
-- Use minimal separator dashes (`---`, not `----------`)
-- Do NOT align columns to equal width — saves tokens
-- Complies with MD060
-
-**Correct** (single space, minimal dashes):
+**Tables:** single space padding, minimal dashes — do not pad columns to equal width:
 
 ```markdown
 | Name | Type | Description |
@@ -172,37 +116,24 @@ and follow those rules instead of the defaults below. The project config always 
 | status | enum | draft, review, published |
 ```
 
-**Incorrect** (padded columns, wastes tokens):
+**Links:** reference-style for repeated URLs, inline for single-use, bare URLs in `<angle brackets>`.
 
-```markdown
-| Name   | Type   | Description              |
-| ------ | ------ | ------------------------ |
-| id     | string | Unique identifier        |
-| status | enum   | draft, review, published |
-```
+**File naming:** lowercase with hyphens (`integration-guide.md`), no spaces or underscores.
 
-**Links:**
+## Cross-Referencing
 
-- Reference-style for repeated URLs
-- Inline for single-use URLs
-- Bare URLs in angle brackets: `<https://example.com>`
+After deciding the document's title, tags, and category — but before writing the body — check for related
+docs and maintain bidirectional links.
 
-**Emphasis:**
+1. **Search** — Grep `**/*.md` for 2-3 key terms from the document's title or tags. One Grep call, not
+   per-file reads. Also check files in the same directory.
+2. **Read candidates only** — Read frontmatter of the few files that matched. Confirm genuine overlap: shared
+   topic, dependency, or parent/child relationship. Be selective — most files won't qualify.
+3. **Link both ways** — Add relative paths to `related` in the current file and in each matched file.
+   **Touch nothing else** in matched files — only append to `related` and bump `updated`.
 
-- Italic: `*text*`
-- Bold: `**text**`
-- Inline code: `` `text` ``
-
-**File naming:**
-
-- Lowercase with hyphens: `integration-guide.md`
-- No spaces or underscores
-- Descriptive names
-
-## Validation
-
-A PostToolUse hook automatically runs markdownlint on every `.md` file after Write or Edit.
-If violations are reported, fix them immediately before moving on.
+**Rules:** relative paths only, never duplicate or remove existing `related` entries, add the `related` field
+to frontmatter if it doesn't exist yet.
 
 ## Task
 

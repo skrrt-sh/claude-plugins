@@ -58,6 +58,19 @@ Or just ask Claude to write markdown — the skill activates automatically.
 
 See [plugins/md-writer/](plugins/md-writer/) for full details.
 
+**Custom lint config:** The plugin ships with a default `.markdownlint.json`. To override it,
+place your own config at your project root:
+
+```bash
+# Any of these will take precedence over the plugin default:
+.markdownlint.json
+.markdownlint.jsonc
+.markdownlint.yaml
+.markdownlint.yml
+```
+
+Both the skill and the validation hook will use your project config instead.
+
 ## Requirements
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) v1.0.33+

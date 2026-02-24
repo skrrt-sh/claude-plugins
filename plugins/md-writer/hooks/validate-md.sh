@@ -32,12 +32,11 @@ while [ "$search_dir" != "/" ]; do
   search_dir="$(dirname "$search_dir")"
 done
 
-# Use user config if found, otherwise plugin default
-if [ -n "$user_config" ]; then
-  result=$(npx --yes markdownlint-cli2 --config "$user_config" "$file_path" 2>&1)
-else
-  result=$(npx --yes markdownlint-cli2 --config "$default_config" "$file_path" 2>&1)
-fi
+config="${user_config:-$default_config}"
+
+# cd into plugin dir so npx resolves node_modules/markdownlint-cli2
+# Use absolute file path and config path since we're changing directory
+result=$(cd "$plugin_dir" && npx markdownlint-cli2 --config "$config" "$file_path" 2>&1)
 
 if [ $? -ne 0 ]; then
   echo "markdownlint violations found:" >&2

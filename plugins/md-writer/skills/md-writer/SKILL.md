@@ -201,13 +201,8 @@ and follow those rules instead of the defaults below. The project config always 
 
 ## Validation
 
-After writing a markdown file, run validation:
-
-```bash
-npx markdownlint-cli2 "<filepath>"
-```
-
-Fix any violations before finishing.
+A PostToolUse hook automatically runs markdownlint on every `.md` file after Write or Edit.
+If violations are reported, fix them immediately before moving on.
 
 ## Task
 

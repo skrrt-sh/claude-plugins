@@ -1,0 +1,22 @@
+{
+  "name": "skrrt-plugins",
+  "version": "1.0.0",
+  "description": "Claude Code plugins by skrrt-sh — documentation, developer workflows, and productivity tools",
+  "owner": {
+    "name": "skrrt-sh",
+    "email": "hello@skrrt.sh"
+  },
+  "metadata": {
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "md-writer",
+      "description": "Write well-structured markdown with YAML frontmatter, Mermaid diagrams, and markdownlint validation",
+      "version": "1.0.0",
+      "source": "./plugins/md-writer",
+      "category": "documentation",
+      "keywords": ["markdown", "markdownlint", "mermaid", "documentation"]
+    }
+  ]
+}

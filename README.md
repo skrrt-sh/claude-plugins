@@ -1,134 +1,100 @@
-# md-writer
+# skrrt-plugins
 
-A Claude Code plugin that produces well-structured markdown documents with YAML frontmatter,
-Mermaid diagrams, and markdownlint compliance.
+Claude Code plugin marketplace by [skrrt-sh](https://github.com/skrrt-sh) — documentation,
+developer workflows, and productivity tools.
 
-## What It Does
+## Installation
 
-When Claude creates or edits `.md` files, this plugin enforces:
+```bash
+# Add the marketplace (one-time)
+/plugin marketplace add skrrt-sh/claude-plugins
 
-- **YAML frontmatter** with required metadata fields (title, description, author, dates, version, status)
-- **Mermaid-only diagrams** — no ASCII art or text-based visuals
-- **Markdownlint compliance** — 20 rules enforced, zero violations allowed
-- **Consistent formatting** — ATX headings, fenced code blocks with language identifiers, proper lists, tables, and links
-- **Automatic validation** — a post-write hook runs markdownlint on every `.md` file and feeds violations back to Claude
+# Browse available plugins
+/plugin
+```
+
+### Team Setup
+
+Add to your project's `.claude/settings.json`:
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "skrrt-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "skrrt-sh/claude-plugins"
+      }
+    }
+  }
+}
+```
+
+## Plugins
+
+### md-writer
+
+Write well-structured markdown with YAML frontmatter, Mermaid diagrams, and markdownlint validation.
+
+```bash
+/plugin install md-writer@skrrt-plugins
+```
+
+**Features:**
+
+- YAML frontmatter with required metadata fields
+- Mermaid-only diagrams — no ASCII art
+- Markdownlint compliance — 20+ rules enforced, zero violations
+- PostToolUse hook — auto-validates `.md` files on Write/Edit
+- Custom config — respects project-level `.markdownlint.json`
+
+**Usage:**
+
+```text
+/md-writer API integration guide for the payments service
+```
+
+Or just ask Claude to write markdown — the skill activates automatically.
+
+See [plugins/md-writer/](plugins/md-writer/) for full details.
+
+**Custom lint config:** The plugin ships with a default `.markdownlint.json`. To override it,
+place your own config at your project root:
+
+```bash
+# Any of these will take precedence over the plugin default:
+.markdownlint.json
+.markdownlint.jsonc
+.markdownlint.yaml
+.markdownlint.yml
+```
+
+Both the skill and the validation hook will use your project config instead.
 
 ## Requirements
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) v1.0.33+
 - Node.js 18+
-- `jq` (for the validation hook)
+- `jq` (for validation hooks)
 
-## Installation
-
-### From GitHub
-
-```bash
-# Add the marketplace (one-time)
-/plugin marketplace add skrrt-labs/md-writer-skill
-
-# Install the plugin
-/plugin install md-writer@skrrt-labs-md-writer-skill
-```
-
-### Local Testing
-
-```bash
-git clone https://github.com/skrrt-labs/md-writer-skill.git
-claude --plugin-dir ./md-writer-skill
-```
-
-### Team Setup
-
-Add to your project's `.claude/settings.json` so all team members get the plugin automatically:
-
-```json
-{
-  "extraKnownMarketplaces": {
-    "skrrt-labs-md-writer-skill": {
-      "source": {
-        "source": "github",
-        "repo": "skrrt-labs/md-writer-skill"
-      }
-    }
-  },
-  "enabledPlugins": {
-    "md-writer@skrrt-labs-md-writer-skill": true
-  }
-}
-```
-
-## Usage
-
-### Invoke Directly
+## Repository Structure
 
 ```text
-/md-writer API integration guide for the payments service
-/md-writer architecture-decision-record.md
-```
-
-### Auto-Invocation
-
-Claude activates the skill automatically when you ask it to create or edit markdown files:
-
-```text
-"Write a markdown doc explaining our auth flow"
-"Create a getting-started guide for the SDK"
-"Document the database schema"
-```
-
-### Validation Hook
-
-Every time Claude writes or edits a `.md` file, the `PostToolUse` hook runs `markdownlint-cli2`
-and reports violations. Claude then fixes them automatically before finishing.
-
-## Custom Markdownlint Config
-
-The plugin ships with a default `.markdownlint.json`. To override it, place your own config file in your project root:
-
-```bash
-# Supported config file names (checked in order):
-# .markdownlint.json
-# .markdownlint.jsonc
-# .markdownlint.yaml
-# .markdownlint.yml
-```
-
-Your project config always takes precedence. Both the skill instructions and the validation hook respect it.
-
-### Default Config
-
-```json
-{
-  "default": true,
-  "MD013": {
-    "line_length": 120,
-    "code_blocks": false,
-    "tables": false
-  },
-  "MD025": {
-    "front_matter_title": ""
-  },
-  "MD060": {
-    "style": "compact"
-  }
-}
-```
-
-## Plugin Structure
-
-```text
-md-writer-skill/
+claude-plugins/
 ├── .claude-plugin/
-│   └── plugin.json              # Plugin manifest
-├── skills/
-│   └── md-writer/
-│       └── SKILL.md             # Skill instructions
-├── hooks/
-│   ├── hooks.json               # PostToolUse hook on Write/Edit
-│   └── validate-md.sh           # Runs markdownlint, respects project config
-├── .markdownlint.json           # Default lint config (fallback)
-├── package.json                 # markdownlint-cli2 dependency
+│   └── marketplace.json         # Marketplace manifest
+├── plugins/
+│   └── md-writer/               # Markdown writer plugin
+│       ├── .claude-plugin/
+│       │   └── plugin.json
+│       ├── skills/
+│       │   └── md-writer/
+│       │       └── SKILL.md
+│       ├── hooks/
+│       │   ├── hooks.json
+│       │   └── validate-md.sh
+│       ├── .markdownlint.json
+│       └── package.json
 └── README.md
 ```
 

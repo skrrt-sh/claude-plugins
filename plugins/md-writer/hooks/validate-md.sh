@@ -8,6 +8,11 @@ if [ -z "$file_path" ] || [[ "$file_path" != *.md ]]; then
   exit 0
 fi
 
+# Skip anything inside a .claude/ directory (plans, memory, etc.)
+if [[ "$file_path" == */.claude/* ]]; then
+  exit 0
+fi
+
 if ! command -v npx &> /dev/null; then
   exit 0
 fi

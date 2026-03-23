@@ -58,7 +58,7 @@ Or just ask Claude to write markdown — the skill activates automatically.
 
 See [plugins/md-writer/](plugins/md-writer/) for full details.
 
-**Custom lint config:** The plugin ships with a default `.markdownlint.json`. To override it,
+**Custom lint config:** The plugin ships with a bundled default config. To override it,
 place your own config at your project root:
 
 ```bash
@@ -69,7 +69,8 @@ place your own config at your project root:
 .markdownlint.yml
 ```
 
-Both the skill and the validation hook will use your project config instead.
+The validation hook walks up from the markdown file looking for the nearest config.
+If none exists, it falls back to the plugin's bundled default. The skill is written to conform to the same defaults.
 
 ## Requirements
 
@@ -93,7 +94,8 @@ claude-plugins/
 │       ├── hooks/
 │       │   ├── hooks.json
 │       │   └── validate-md.sh
-│       ├── .markdownlint.json
+│       ├── config/
+│       │   └── markdownlint-default.json
 │       └── package.json
 └── README.md
 ```

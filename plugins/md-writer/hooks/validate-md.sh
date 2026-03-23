@@ -1,6 +1,7 @@
 #!/bin/bash
 # PostToolUse hook: validate markdown files with markdownlint
-# Uses project .markdownlint.json if present, otherwise falls back to plugin default
+# Walks up from the target file to find a project-level config.
+# Falls back to the plugin's bundled config/markdownlint-default.json.
 
 file_path=$(cat | jq -r '.tool_input.file_path // empty' 2>/dev/null)
 
@@ -13,35 +14,35 @@ if [[ "$file_path" == */.claude/* ]]; then
   exit 0
 fi
 
-if ! command -v npx &> /dev/null; then
-  exit 0
-fi
-
-# Use CLAUDE_PLUGIN_ROOT env var (set by Claude Code for plugin hooks)
-# Fall back to dirname resolution for direct invocation / testing
 plugin_dir="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
-default_config="$plugin_dir/.markdownlint.json"
 
-# Walk up from the file's directory looking for a user config
-config_names=(".markdownlint.json" ".markdownlint.jsonc" ".markdownlint.yaml" ".markdownlint.yml")
+# Walk up from the markdown file's directory looking for a project config
+config=""
 search_dir="$(dirname "$file_path")"
-user_config=""
-
 while [ "$search_dir" != "/" ]; do
-  for name in "${config_names[@]}"; do
+  for name in .markdownlint.json .markdownlint.jsonc .markdownlint.yaml .markdownlint.yml; do
     if [ -f "$search_dir/$name" ]; then
-      user_config="$search_dir/$name"
+      config="$search_dir/$name"
       break 2
     fi
   done
   search_dir="$(dirname "$search_dir")"
 done
 
-config="${user_config:-$default_config}"
+# Fall back to the plugin's bundled default
+if [ -z "$config" ]; then
+  config="$plugin_dir/config/markdownlint-default.json"
+fi
 
-# cd into plugin dir so npx resolves node_modules/markdownlint-cli2
-# Use absolute file path and config path since we're changing directory
-result=$(cd "$plugin_dir" && npx markdownlint-cli2 --config "$config" "$file_path" 2>&1)
+# Prefer the local installed binary; fall back to npx; exit if neither available
+local_bin="$plugin_dir/node_modules/.bin/markdownlint-cli2"
+if [ -x "$local_bin" ]; then
+  result=$(cd "$plugin_dir" && "$local_bin" --config "$config" "$file_path" 2>&1)
+elif command -v npx &> /dev/null; then
+  result=$(cd "$plugin_dir" && npx markdownlint-cli2 --config "$config" "$file_path" 2>&1)
+else
+  exit 0
+fi
 
 if [ $? -ne 0 ]; then
   echo "markdownlint violations found:" >&2

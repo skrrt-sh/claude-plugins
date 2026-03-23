@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "description": "Claude Code plugin for writing well-structured markdown documents",
   "scripts": {
-    "lint": "markdownlint-cli2 '**/*.md' '#node_modules'",
-    "lint:fix": "markdownlint-cli2 --fix '**/*.md' '#node_modules'"
+    "lint": "markdownlint-cli2 --config config/markdownlint-default.json '**/*.md' '#node_modules'",
+    "lint:fix": "markdownlint-cli2 --fix --config config/markdownlint-default.json '**/*.md' '#node_modules'"
   },
   "dependencies": {
-    "markdownlint-cli2": "^0.17.0"
+    "markdownlint-cli2": "0.17.2"
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "md-writer",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "description": "Claude Code plugin for writing well-structured markdown documents",
   "scripts": {
     "lint": "markdownlint-cli2 --config config/markdownlint-default.json '**/*.md' '#node_modules'",

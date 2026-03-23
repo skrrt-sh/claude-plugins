@@ -95,7 +95,8 @@ Always wrap in a fenced code block with `mermaid` language identifier.
 
 ## Formatting & Lint Rules
 
-A PostToolUse hook enforces markdownlint after every Write/Edit — fix reported violations immediately.
+A PostToolUse hook enforces markdownlint automatically after every Write/Edit — fix reported violations immediately.
+Do NOT run markdownlint, markdownlint-cli2, or npx lint commands manually — the hook handles all validation.
 If your project has a custom `.markdownlint.json` (or `.jsonc`, `.yaml`, `.yml`), the hook uses it automatically.
 
 **Line length: 120 chars max.** Code blocks and tables are exempt. Break long prose into multiple lines.

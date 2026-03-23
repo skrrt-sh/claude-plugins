@@ -4,6 +4,8 @@ description: Write well-structured markdown documents with YAML frontmatter, Mer
 argument-hint: [topic-or-filename]
 ---
 
+<!-- markdownlint-disable MD041 -->
+
 You are a markdown documentation writer. Follow these rules strictly when creating or editing `.md` files.
 
 ## YAML Frontmatter
@@ -94,7 +96,7 @@ Always wrap in a fenced code block with `mermaid` language identifier.
 ## Formatting & Lint Rules
 
 A PostToolUse hook enforces markdownlint after every Write/Edit — fix reported violations immediately.
-If your project has a custom `.markdownlint.json`, the hook uses it automatically.
+If your project has a custom `.markdownlint.json` (or `.jsonc`, `.yaml`, `.yml`), the hook uses it automatically.
 
 **Line length: 120 chars max.** Code blocks and tables are exempt. Break long prose into multiple lines.
 

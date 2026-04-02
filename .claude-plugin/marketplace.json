@@ -17,6 +17,14 @@
       "source": "./plugins/md-writer",
       "category": "documentation",
       "keywords": ["markdown", "markdownlint", "mermaid", "documentation"]
+    },
+    {
+      "name": "gh-ship",
+      "description": "Create conventional commits with gitmojis and open focused pull requests with gh",
+      "version": "1.0.0",
+      "source": "./plugins/gh-ship",
+      "category": "developer-workflow",
+      "keywords": ["git", "github", "gh", "conventional-commits", "gitmoji", "pull-request"]
     }
   ]
 }

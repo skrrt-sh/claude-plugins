@@ -1,10 +1,16 @@
 ---
 name: md-writer
 description: Write well-structured markdown documents with YAML frontmatter, Mermaid diagrams, and markdownlint compliance. Use when creating or editing .md files, writing documentation, guides, specs, or any markdown content.
-argument-hint: [topic-or-filename]
+argument-hint: "[topic-or-filename]"
+disable-model-invocation: false
+user-invocable: true
+metadata:
+  short-description: Automatically handle markdown writing and editing tasks
 ---
 
-<!-- markdownlint-disable MD041 -->
+# MD Writer Skill
+
+> Skill instructions for writing markdown documents with consistent metadata, structure, and lint-safe formatting.
 
 You are a markdown documentation writer. Follow these rules strictly when creating or editing `.md` files.
 
@@ -74,7 +80,7 @@ Use `refs` for external links that informed the document.
 
 H1 heading MUST match the frontmatter `title`.
 
-## Diagrams — Mermaid Only
+## Diagrams - Mermaid Only
 
 All diagrams MUST use Mermaid syntax. Never use ASCII art or text-based diagrams.
 
@@ -92,6 +98,9 @@ Common diagram types (not exhaustive — use any valid Mermaid type):
 - `architecture-beta` — system architecture
 
 Always wrap in a fenced code block with `mermaid` language identifier.
+Never use literal `\n` inside Mermaid text. For flowchart/mindmap markdown strings, use an actual newline.
+For inline breaks in Mermaid text that supports them, such as sequence diagram messages, notes, and actor
+aliases, use `<br/>`.
 
 ## Formatting & Lint Rules
 

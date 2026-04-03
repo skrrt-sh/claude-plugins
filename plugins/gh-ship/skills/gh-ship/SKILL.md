@@ -1,6 +1,6 @@
 ---
 name: gh-ship
-description: Create strong conventional commits and pull requests with git and gh. Use when staging changes, choosing a conventional commit type and gitmoji, writing commit messages and bodies, pushing a branch, or opening a PR with a clear title and description.
+description: Create strong conventional commits and focused pull requests with git and gh. Use whenever the agent is about to run git commit, write or rewrite a commit message, choose a conventional commit type or mandatory gitmoji, stage or split changes for commit, push a branch, or create, update, or title a GitHub pull request with gh. This skill should trigger even when the user does not explicitly mention gh-ship but asks the agent to commit changes or open a PR. Gitmoji is required and must appear after the commit type or type(scope) prefix.
 argument-hint: "[what-to-commit-or-pr-goal]"
 disable-model-invocation: false
 user-invocable: true
@@ -12,8 +12,7 @@ metadata:
 
 > Skill instructions for splitting changes, writing conventional commits with gitmojis, and publishing PRs with `gh`.
 
-You are a commit and PR writer. Follow the `vivaxy/vscode-conventional-commits` workflow and message shape, then use
-`gh` to publish a clean PR.
+You are a commit and PR writer. Follow the `vivaxy/vscode-conventional-commits` workflow, enforce this repository's stricter gitmoji placement rules, and use `gh` to publish a clean PR.
 
 ## Sources To Read
 
@@ -35,9 +34,9 @@ Those references are extracted from:
 3. Choose the commit `type` from `references/commit-types.md`.
 4. Choose the optional `scope` from the dominant subsystem, package, app, directory, or concern.
 5. Choose the best `gitmoji` from `references/gitmojis.md`.
-6. Write the commit header in the upstream extension format.
-7. Add a body when the diff is non-trivial.
-8. Add a footer for breaking changes, issue closing references, or follow-up metadata.
+6. Write the commit header in the required repository format.
+7. Write a description body explaining what changed and why. Treat the body as required for this skill, even though the Conventional Commits spec allows it to be optional.
+8. Add footer lines for breaking changes, issue closing references, or follow-up metadata. When the change is breaking, add a `BREAKING CHANGE:` footer.
 9. Commit with `git`.
 10. Push the branch and open or update the PR with `gh`.
 
@@ -52,12 +51,38 @@ type(scope): :gitmoji: imperative subject
 Rules:
 
 - `scope` is optional. If absent, use `type: :gitmoji: subject`.
-- Put the gitmoji after `type(scope): `, not before the type.
+- Gitmoji is mandatory for every commit written by this skill.
+- Put the gitmoji immediately after `type(scope): ` or `type: `, never before the type and never after the subject.
 - Prefer gitmoji code form such as `:sparkles:` because the upstream repo defaults to `emojiFormat=code`.
 - Write the subject in imperative mood: `add`, `fix`, `update`, `remove`, `refactor`.
 - Keep the subject specific and outcome-focused.
 - Do not end the subject with a period.
 - Use `[skip ci]` at the end of the header only when the change genuinely should not run CI.
+
+The current stable Conventional Commits 1.0.0 structure is:
+
+```text
+<type>[optional scope]: <description>
+
+[optional body]
+[optional footer(s)]
+```
+
+This skill intentionally applies a stricter house style on top of that spec:
+
+```text
+<type>[optional scope]: :gitmoji: <imperative subject>
+
+<description body>
+
+[optional footer(s)]
+```
+
+Treat the commit message as three logical sections:
+
+- Message: the first-line header containing type, optional scope, mandatory gitmoji, and imperative subject.
+- Description: the body section after one blank line. This skill requires a body so the commit explains what changed and why.
+- Breaking Changes: a footer section. Include `BREAKING CHANGE: ...` when the change is breaking. Other trailers such as `Refs:` and `Closes:` also belong in the footer section.
 
 Examples:
 
@@ -70,9 +95,9 @@ ci(actions): :green_heart: fix release workflow permissions [skip ci]
 
 ## Body And Footer
 
-Body:
+Description body:
 
-- Add a body when the diff is not obvious from the header.
+- Add a body for every commit produced by this skill.
 - Explain what changed and why.
 - Prefer short paragraphs or compact bullets.
 - Focus on behavior, constraints, migration impact, and notable tradeoffs.
@@ -87,6 +112,7 @@ Footer:
 
 - Choose the `type` by the primary intent, not every side effect in the diff.
 - Choose the gitmoji by the visible nature of the change. The gitmoji complements the type; it does not replace it.
+- Do not omit the gitmoji. If no gitmoji seems to fit, the commit is not ready to write yet.
 - If type and gitmoji pull in different directions, fix the commit split instead of forcing one overloaded message.
 - Prefer multiple commits over one mixed commit when the diff spans different intents.
 - Preserve existing repo conventions if the repository already uses a narrower type or scope vocabulary through commitlint.
@@ -141,6 +167,9 @@ gh pr view --web
 - Never use `git commit --amend` unless explicitly requested.
 - Never rewrite history unless explicitly requested.
 - If the worktree already contains unrelated user changes, work around them and leave them untouched.
+- Never place the gitmoji before the commit type or after the subject.
+- Never omit the description body for a commit produced by this skill.
+- Never use a breaking change without either `!` in the type/scope prefix or a `BREAKING CHANGE:` footer. Prefer including the `BREAKING CHANGE:` footer because it is clearer.
 
 ## Task
 

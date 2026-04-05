@@ -1,0 +1,23 @@
+{
+  "skill_name": "md-writer",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Write a markdown guide about setting up a PostgreSQL database with Docker for local development. Include a Mermaid diagram showing the container architecture.",
+      "expected_output": "A well-structured .md file with YAML frontmatter (title, description, author, created, updated, version, status, tags, category), H1 matching title, a Mermaid diagram, fenced code blocks with language identifiers, and proper formatting.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Create an API specification document for a REST endpoint that handles user authentication. It should cover the request/response formats, error codes, and flow.",
+      "expected_output": "A markdown file with complete YAML frontmatter, proper heading hierarchy, tables for request/response fields, a sequence diagram in Mermaid, and code blocks with language tags.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Write an Architecture Decision Record (ADR) about choosing Redis over Memcached for session caching. Include pros/cons and a decision matrix.",
+      "expected_output": "An ADR-style markdown document with YAML frontmatter including category: adr, structured sections (context, decision, consequences), a comparison table, and proper formatting.",
+      "files": []
+    }
+  ]
+}

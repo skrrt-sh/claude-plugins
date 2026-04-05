@@ -1,6 +1,6 @@
 ---
 title: "Commit Types Reference"
-description: "Reference for the conventional commit types used by the gh-ship skill."
+description: "Reference for the conventional commit types used by the ship commit skill."
 author: "skrrt-sh"
 created: "2026-04-02"
 updated: "2026-04-02"
@@ -20,7 +20,7 @@ audience: ["external-developers", "backend-team", "frontend-team"]
 
 # Commit Types Reference
 
-> Reference for the conventional commit type titles, descriptions, and practical selection guidance used by `gh-ship`.
+> Reference for the conventional commit type titles, descriptions, and practical selection guidance used by `ship:commit`.
 
 ## Table of Contents
 

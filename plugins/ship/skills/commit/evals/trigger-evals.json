@@ -1,0 +1,34 @@
+[
+  {
+    "query": "please make a clean conventional commit for the markdown hook fixes i just staged, keep the message focused on the lint config fallback behavior",
+    "should_trigger": true
+  },
+  {
+    "query": "i changed a couple files in the auth package and need help splitting them into two git commits with proper messages",
+    "should_trigger": true
+  },
+  {
+    "query": "write me a gitmoji conventional commit for the release script cleanup and include a useful body",
+    "should_trigger": true
+  },
+  {
+    "query": "can you review my worktree and figure out the smallest coherent commit for the pr title fix",
+    "should_trigger": true
+  },
+  {
+    "query": "open a pull request for my current branch and write the summary/testing sections",
+    "should_trigger": false
+  },
+  {
+    "query": "draft release notes for v1.4.0 from the commits since the last tag",
+    "should_trigger": false
+  },
+  {
+    "query": "explain what conventional commits are and when to use feat vs fix",
+    "should_trigger": false
+  },
+  {
+    "query": "show me the current git status and tell me which files changed",
+    "should_trigger": false
+  }
+]

@@ -1,0 +1,26 @@
+{
+  "skill_name": "ship",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Create a conventional commit for a focused bug fix in the markdown validation hook. The changes fix a crash when no markdownlint config file is found.",
+      "expected_output": "A commit message with conventional type, gitmoji, imperative subject, and body explaining the fix.",
+      "files": [],
+      "skill": "ship:commit"
+    },
+    {
+      "id": 2,
+      "prompt": "Open a GitHub pull request for the current branch with a clear summary of what changed and a testing section.",
+      "expected_output": "A PR created via gh cli with title, summary section, testing section, and notes.",
+      "files": [],
+      "skill": "ship:pr"
+    },
+    {
+      "id": 3,
+      "prompt": "Draft release notes for v1.4.0, summarizing commits since the last tag. Update the changelog if one exists.",
+      "expected_output": "Release notes with What's Changed sections (Features, Fixes, Internal), a compare link, and changelog update if applicable.",
+      "files": [],
+      "skill": "ship:release"
+    }
+  ]
+}

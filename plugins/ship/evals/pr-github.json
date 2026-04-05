@@ -1,0 +1,11 @@
+{
+  "skills": ["ship:pr"],
+  "query": "Open a GitHub pull request for the current branch with a clear summary and testing section.",
+  "expected_behavior": [
+    "Runs forge detection before using a forge CLI",
+    "Uses gh for GitHub remotes and refuses glab for GitHub remotes",
+    "Creates a non-interactive PR title and body",
+    "Reports testing honestly",
+    "Avoids force-push variants"
+  ]
+}

@@ -1,6 +1,6 @@
 ---
 title: "Gitmojis Reference"
-description: "Reference for the gitmoji catalog and common commit pairings used by the gh-ship skill."
+description: "Reference for the gitmoji catalog and common commit pairings used by the ship commit skill."
 author: "skrrt-sh"
 created: "2026-04-02"
 updated: "2026-04-02"
@@ -20,7 +20,7 @@ audience: ["external-developers", "backend-team", "frontend-team"]
 
 # Gitmojis Reference
 
-> Reference for choosing gitmojis that complement conventional commit intent in the `gh-ship` workflow.
+> Reference for choosing gitmojis that complement conventional commit intent in the `ship:commit` workflow.
 
 ## Table of Contents
 

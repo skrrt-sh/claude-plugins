@@ -211,12 +211,11 @@ skills/
 Install the pinned development skills before working on the plugins:
 
 ```bash
-# Install skills from the lockfile (one-time, or after pulling new lock entries)
-claude skill install --from skills-lock.json
+# Install dev skills (one-time, or after pulling new lock entries)
+bunx skills add anthropics/skills --skill skill-creator
 ```
 
-This restores `.agents/` with the exact skill versions the team uses
-(currently `skill-creator` from `anthropics/skills`).
+This restores `.agents/` with the skill-creator used for eval workflows.
 
 ### Running Evals
 

@@ -84,7 +84,8 @@ For GitLab with `glab`:
 - Include testing only if it is known.
 - Include migration, rollout, or breaking-change notes when relevant.
 - Add a compare link when the forge and previous tag are known.
-- End the release text with an AI attribution line unless the user asks not to.
+- End the release text with the skrrt skills attribution line unless the user
+  asks not to.
 
 Preferred structure:
 
@@ -105,7 +106,7 @@ Preferred structure:
 
 **Full Changelog**: <compare link>
 
-🤖 Generated with AI
+🤖 Generated using [skrrt skills](https://github.com/skrrt-sh/skills)
 ```
 
 Section rules:

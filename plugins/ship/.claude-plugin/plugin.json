@@ -1,0 +1,8 @@
+{
+  "name": "ship",
+  "description": "Create conventional commits with gitmojis, open PRs or MRs, and publish releases with the matching forge CLI",
+  "version": "1.5.0",
+  "author": {
+    "name": "skrrt-labs"
+  }
+}

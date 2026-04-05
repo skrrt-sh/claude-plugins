@@ -3,7 +3,7 @@ title: "Skrrt Plugins"
 description: "Marketplace overview for the skrrt-sh Claude Code plugins and their documentation."
 author: "skrrt-sh"
 created: "2026-04-02"
-updated: "2026-04-02"
+updated: "2026-04-04"
 version: "1.0.0"
 status: "published"
 tags: ["plugins", "marketplace", "markdown", "github"]
@@ -11,7 +11,9 @@ category: "guide"
 aliases: ["skrrt-plugins", "plugin-marketplace"]
 related:
   - "./plugins/md-writer/skills/md-writer/SKILL.md"
-  - "./plugins/gh-ship/skills/gh-ship/SKILL.md"
+  - "./plugins/ship/skills/commit/SKILL.md"
+  - "./plugins/ship/skills/pr/SKILL.md"
+  - "./plugins/ship/skills/release/SKILL.md"
 audience: ["external-developers", "backend-team", "frontend-team"]
 ---
 
@@ -33,11 +35,13 @@ developer workflows, and productivity tools.
 ## Installation
 
 ```bash
-# Add the marketplace (one-time)
-/plugin marketplace add skrrt-sh/claude-plugins
+bunx skills add skrrt-sh/skills
+```
 
-# Browse available plugins
-/plugin
+Or from inside Claude Code:
+
+```bash
+/install skrrt-sh/skills
 ```
 
 ### Team Setup
@@ -50,7 +54,7 @@ Add to your project's `.claude/settings.json`:
     "skrrt-plugins": {
       "source": {
         "source": "github",
-        "repo": "skrrt-sh/claude-plugins"
+        "repo": "skrrt-sh/skills"
       }
     }
   }
@@ -99,12 +103,13 @@ place your own config at your project root:
 The validation hook walks up from the markdown file looking for the nearest config.
 If none exists, it falls back to the plugin's bundled default. The skill is written to conform to the same defaults.
 
-### gh-ship
+### ship
 
-Create conventional commits with gitmojis and open focused pull requests with `gh`.
+Create conventional commits with gitmojis, open focused PRs or MRs, and prepare release text with the
+matching forge CLI.
 
 ```bash
-/plugin install gh-ship@skrrt-plugins
+/plugin install ship@skrrt-plugins
 ```
 
 **Features:**
@@ -112,16 +117,41 @@ Create conventional commits with gitmojis and open focused pull requests with `g
 - Uses the `vivaxy/vscode-conventional-commits` commit shape
 - Uses upstream conventional commit type titles and descriptions
 - Uses the same gitmoji dataset version referenced by that repo
-- Guides clean commit splitting, commit body/footer writing, and PR authoring
-- Publishes PRs with explicit `gh` commands instead of vague instructions
+- Splits work into dedicated `commit`, `pr`, and `release` skills
+- Detects whether the repo is hosted on GitHub or GitLab before choosing `gh` or `glab`
+- Bundles skill-local forge-detection scripts for portable execution
+- Documents a conservative `git` command subset for status, staging, commit, push, and release workflows
+- Publishes review requests and releases with explicit non-interactive CLI commands
+- Updates an existing `CHANGELOG.md` during release work when the repository has one
+- Keeps the skills user-invocable and model-invocable
+- Bundles a recommended Claude Code permissions template with `ask` rules for writes and force-push variants
 
 **Usage:**
 
 ```text
-/gh-ship prepare commits and a PR for the auth refresh-token changes
+/ship:commit prepare a clean conventional commit for the auth refresh-token changes
+/ship:pr open a review request for the auth refresh-token branch
+/ship:release draft release notes for v1.4.0
 ```
 
-Or ask Claude to write a conventional commit and open a PR with `gh`.
+Or ask Claude to commit work, open a PR or MR, or prepare a release.
+
+**Recommended permissions:**
+
+Claude Code permissions are configured in `.claude/settings.json`, not in `SKILL.md`.
+This plugin includes a recommended template at
+[`plugins/ship/templates/claude-settings.json`](plugins/ship/templates/claude-settings.json).
+Merge it into your project's `.claude/settings.json` if you want:
+
+- read-only git and view commands allowed automatically
+- mutating git, `gh`, and `glab` commands escalated with `permissions.ask`
+- force-push variants escalated to human approval instead of silently allowed
+- destructive commands such as `git reset --hard` denied
+
+**Evaluations:**
+
+This plugin also includes lightweight evaluation fixtures under [`plugins/ship/evals`](plugins/ship/evals)
+to support the Anthropic recommendation to test skills against representative scenarios before sharing them.
 
 ## Requirements
 
@@ -132,7 +162,7 @@ Or ask Claude to write a conventional commit and open a PR with `gh`.
 ## Repository Structure
 
 ```text
-claude-plugins/
+skills/
 ├── .claude-plugin/
 │   └── marketplace.json         # Marketplace manifest
 ├── plugins/
@@ -148,16 +178,64 @@ claude-plugins/
 │   │   ├── config/
 │   │   │   └── markdownlint-default.json
 │   │   └── package.json
-│   └── gh-ship/                 # Conventional commit + gh PR workflow plugin
+│   └── ship/                    # Commit, PR or MR, and release workflow plugin
 │       ├── .claude-plugin/
 │       │   └── plugin.json
+│       ├── evals/
+│       │   ├── commit-basic.json
+│       │   ├── pr-github.json
+│       │   └── release-changelog.json
+│       ├── templates/
+│       │   └── claude-settings.json
 │       └── skills/
-│           └── gh-ship/
+│           ├── commit/
+│           │   ├── SKILL.md
+│           │   └── reference/
+│           │       ├── commit-types.md
+│           │       └── gitmojis.md
+│           ├── pr/
+│           │   ├── SKILL.md
+│           │   └── scripts/
+│           │       └── detect-forge-cli.sh
+│           └── release/
 │               ├── SKILL.md
-│               └── references/
-│                   ├── commit-types.md
-│                   └── gitmojis.md
+│               └── scripts/
+│                   └── detect-forge-cli.sh
 └── README.md
+```
+
+## Contributing
+
+### Dev Setup
+
+Install the pinned development skills before working on the plugins:
+
+```bash
+# Install dev skills (one-time, or after pulling new lock entries)
+bunx skills add anthropics/skills --skill skill-creator
+```
+
+This restores `.agents/` with the skill-creator used for eval workflows.
+
+### Running Evals
+
+Use the skill-creator to test changes against the eval suites:
+
+```text
+/skill-creator audit our skills, run evals
+```
+
+Eval workspaces (`md-writer-workspace/`, `ship-workspace/`) are gitignored —
+they are runtime artifacts from running evals, not committed. The eval
+definitions themselves live in `plugins/*/evals/`.
+
+### Project Layout for Dev Files
+
+```text
+.agents/                  # Installed dev skills (gitignored, restored from lockfile)
+skills-lock.json          # Lockfile for dev skills (committed)
+md-writer-workspace/      # md-writer eval artifacts (gitignored)
+ship-workspace/           # ship eval artifacts (gitignored)
 ```
 
 ## License

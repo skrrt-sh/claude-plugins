@@ -1,0 +1,34 @@
+[
+  {
+    "query": "push this branch and open a github pr with a short summary, testing, and rollout notes",
+    "should_trigger": true
+  },
+  {
+    "query": "i need a merge request on gitlab for the current branch, can you write the title and description too",
+    "should_trigger": true
+  },
+  {
+    "query": "create a pr from my branch but make sure you use the right cli for the remote host first",
+    "should_trigger": true
+  },
+  {
+    "query": "update the existing pr text so reviewers can see what changed and how i tested it",
+    "should_trigger": true
+  },
+  {
+    "query": "make a conventional commit with gitmoji for the files i just edited",
+    "should_trigger": false
+  },
+  {
+    "query": "prepare release notes and publish v2.0.0 if the changelog is up to date",
+    "should_trigger": false
+  },
+  {
+    "query": "what's the difference between github pull requests and gitlab merge requests",
+    "should_trigger": false
+  },
+  {
+    "query": "show me which remote origin points to and whether this repo is github or gitlab",
+    "should_trigger": false
+  }
+]

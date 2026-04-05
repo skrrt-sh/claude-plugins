@@ -1,0 +1,11 @@
+{
+  "skills": ["ship:release"],
+  "query": "Draft a release for v1.4.0, update the existing changelog if present, and prepare publish-ready notes.",
+  "expected_behavior": [
+    "Inspects tags and commit history to determine the release range",
+    "Checks for CHANGELOG.md before publishing",
+    "Uses the house release-note format with curated sections",
+    "Includes a compare link when possible",
+    "Preserves existing changelog style and avoids force-based git commands"
+  ]
+}

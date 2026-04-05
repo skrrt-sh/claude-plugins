@@ -1,7 +1,7 @@
 {
   "name": "md-writer",
   "description": "Write well-structured markdown documents with YAML frontmatter, Mermaid diagrams, and markdownlint compliance",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "author": {
     "name": "skrrt-labs"
   }

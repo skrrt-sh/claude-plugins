@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git branch --show-current:*)",
+      "Bash(git rev-parse --abbrev-ref --symbolic-full-name @{upstream}:*)",
+      "Bash(git remote get-url:*)",
+      "Bash(git tag --list:*)",
+      "Bash(git describe --tags --abbrev=0:*)",
+      "Bash(rg --files:*)",
+      "Bash(gh pr view:*)",
+      "Bash(glab mr view:*)",
+      "Bash(gh release view:*)",
+      "Bash(glab release view:*)"
+    ],
+    "ask": [
+      "Bash(git add:*)",
+      "Bash(git restore --staged:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git push --force-with-lease:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr edit:*)",
+      "Bash(glab mr create:*)",
+      "Bash(glab mr update:*)",
+      "Bash(gh release create:*)",
+      "Bash(glab release create:*)"
+    ],
+    "deny": [
+      "Bash(git reset --hard:*)",
+      "Bash(git checkout --:*)",
+      "Bash(git clean:*)"
+    ]
+  }
+}

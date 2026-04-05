@@ -1,0 +1,34 @@
+[
+  {
+    "query": "draft the v1.4.0 release notes from commits since the last tag and update CHANGELOG.md if this repo has one",
+    "should_trigger": true
+  },
+  {
+    "query": "publish a github release for v2.0.0 with a what's changed section, fixes, and a compare link",
+    "should_trigger": true
+  },
+  {
+    "query": "prepare a gitlab release entry for the new tag and make sure the changelog entry matches the release text",
+    "should_trigger": true
+  },
+  {
+    "query": "can you summarize the user-facing changes since v1.3.0 and turn them into release notes",
+    "should_trigger": true
+  },
+  {
+    "query": "open a pr for the current branch and include testing details",
+    "should_trigger": false
+  },
+  {
+    "query": "write a conventional commit with a gitmoji for the release automation changes",
+    "should_trigger": false
+  },
+  {
+    "query": "what is semantic versioning and how do prereleases work",
+    "should_trigger": false
+  },
+  {
+    "query": "list the git tags in this repo and tell me which one is latest",
+    "should_trigger": false
+  }
+]

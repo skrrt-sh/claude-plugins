@@ -1,0 +1,11 @@
+{
+  "skills": ["ship:commit"],
+  "query": "Create a conventional commit for a focused bug fix in the markdown validation hook.",
+  "expected_behavior": [
+    "Inspects git changes before choosing a message",
+    "Uses a conventional commit type with a gitmoji",
+    "Keeps unrelated files out of the commit",
+    "Includes a commit body that explains what changed and why",
+    "Avoids force-based git commands"
+  ]
+}

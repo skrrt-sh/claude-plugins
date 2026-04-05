@@ -1,11 +1,10 @@
 ---
 name: commit
-description: Creates focused conventional commits with mandatory gitmojis. Use when Claude needs to review git changes, split work into commits, stage files, or write commit messages.
-argument-hint: "[what-to-commit]"
-disable-model-invocation: false
-user-invocable: true
+description: Creates focused conventional commits with mandatory gitmojis. Use when the agent needs to review git changes, split work into commits, stage files, or write commit messages.
 metadata:
   short-description: Split changes and create strong conventional commits
+  argument-hint: "[what-to-commit]"
+  user-invocable: true
 ---
 
 # Git Commit Skill
@@ -54,7 +53,7 @@ Avoid history-rewriting or destructive `git` commands.
 
 - `git` must be installed and available on `PATH`.
 - The repository must already exist and have the intended changes in the worktree.
-- When the project uses Claude Code settings, prefer `permissions.ask` for mutating
+- When the project uses agent permission settings, prefer `permissions.ask` for mutating
   git commands and `permissions.deny` for destructive commands.
 
 ## Commit Format
@@ -113,7 +112,7 @@ Footer:
 - Never use a breaking change without a `BREAKING CHANGE:` footer.
 - Never use force-based git commands such as `git push --force`, `git push -f`, or `git push --force-with-lease`.
 - Stop and ask the user before including files that appear unrelated to the requested commit.
-- Treat staging and committing as human-approval actions when the project uses Claude permission rules.
+- Treat staging and committing as human-approval actions when the project uses agent permission rules.
 
 ## Task
 

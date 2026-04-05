@@ -13,18 +13,18 @@
     {
       "name": "md-writer",
       "description": "Write well-structured markdown with YAML frontmatter, Mermaid diagrams, and markdownlint validation",
-      "version": "1.0.0",
+      "version": "1.1.1",
       "source": "./plugins/md-writer",
       "category": "documentation",
       "keywords": ["markdown", "markdownlint", "mermaid", "documentation"]
     },
     {
-      "name": "gh-ship",
-      "description": "Create conventional commits with gitmojis and open focused pull requests with gh",
-      "version": "1.1.0",
-      "source": "./plugins/gh-ship",
+      "name": "ship",
+      "description": "Create conventional commits with gitmojis, open PRs or MRs, and publish releases with the matching forge CLI",
+      "version": "1.4.0",
+      "source": "./plugins/ship",
       "category": "developer-workflow",
-      "keywords": ["git", "github", "gh", "conventional-commits", "gitmoji", "pull-request"]
+      "keywords": ["git", "github", "gitlab", "conventional-commits", "gitmoji", "pull-request", "release"]
     }
   ]
 }

@@ -1,11 +1,10 @@
 ---
 name: release
-description: Drafts and publishes GitHub or GitLab releases with curated release notes. Use when Claude needs to prepare release text, compare tags, summarize release changes, or create a release.
-argument-hint: "[release-goal]"
-disable-model-invocation: false
-user-invocable: true
+description: Drafts and publishes GitHub or GitLab releases with curated release notes. Use when the agent needs to prepare release text, compare tags, summarize release changes, or create a release.
 metadata:
   short-description: Draft release notes and publish releases safely
+  argument-hint: "[release-goal]"
+  user-invocable: true
 ---
 
 # Git Release Skill
@@ -21,7 +20,8 @@ release notes.
 - `gh` is required for GitHub remotes.
 - `glab` is required for GitLab remotes.
 - If the matching CLI is missing, stop and tell the user exactly what is missing.
-- When the project uses Claude Code settings, prefer `permissions.ask` for mutating git and forge commands, including force-push variants.
+- When the project uses agent permission settings, prefer `permissions.ask` for
+  mutating git and forge commands, including force-push variants.
 
 ## Forge Detection
 
@@ -84,7 +84,7 @@ For GitLab with `glab`:
 - Include testing only if it is known.
 - Include migration, rollout, or breaking-change notes when relevant.
 - Add a compare link when the forge and previous tag are known.
-- End the release text with the Claude Code attribution line unless the user asks not to.
+- End the release text with an AI attribution line unless the user asks not to.
 
 Preferred structure:
 
@@ -105,7 +105,7 @@ Preferred structure:
 
 **Full Changelog**: <compare link>
 
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
+🤖 Generated with AI
 ```
 
 Section rules:
@@ -114,7 +114,8 @@ Section rules:
 - `feat` usually maps to `✨ Features`.
 - `fix` usually maps to `🐛 Fixes`.
 - Breaking changes always get a dedicated `⚠️ Breaking Changes` section.
-- `docs`, `chore`, `ci`, `build`, and purely internal refactors usually belong in `🧰 Internal` only when they matter to release readers.
+- `docs`, `chore`, `ci`, `build`, and purely internal refactors usually belong
+  in `🧰 Internal` only when they matter to release readers.
 - Prefer reader-facing summaries over commit-message restatements.
 
 ## Changelog Rules
@@ -135,7 +136,7 @@ Section rules:
 - Stop if the detector reports `unknown-remote`, `no-remote`, or `no-compatible-cli`.
 - Never skip updating an existing changelog for a real release unless the user explicitly asks you not to.
 - Never use `git push --force`, `git push -f`, or `git push --force-with-lease` as part of the release flow.
-- Treat release creation as a human-approval action when the project uses Claude permission rules.
+- Treat release creation as a human-approval action when the project uses agent permission rules.
 
 ## Task
 

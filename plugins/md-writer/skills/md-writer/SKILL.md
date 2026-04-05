@@ -1,11 +1,10 @@
 ---
 name: md-writer
 description: Write well-structured markdown documents with YAML frontmatter, Mermaid diagrams, and markdownlint compliance. Use when creating or editing .md files, writing documentation, guides, specs, or any markdown content.
-argument-hint: "[topic-or-filename]"
-disable-model-invocation: false
-user-invocable: true
 metadata:
   short-description: Automatically handle markdown writing and editing tasks
+  argument-hint: "[topic-or-filename]"
+  user-invocable: true
 ---
 
 # MD Writer Skill

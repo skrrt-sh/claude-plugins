@@ -1,11 +1,10 @@
 ---
 name: pr
-description: Creates or updates GitHub pull requests and GitLab merge requests with the matching CLI. Use when Claude needs to push a branch, open a review request, or write PR or MR text.
-argument-hint: "[pr-or-mr-goal]"
-disable-model-invocation: false
-user-invocable: true
+description: Creates or updates GitHub pull requests and GitLab merge requests with the matching CLI. Use when the agent needs to push a branch, open a review request, or write PR or MR text.
 metadata:
   short-description: Push branches and open focused PRs or MRs
+  argument-hint: "[pr-or-mr-goal]"
+  user-invocable: true
 ---
 
 # Git PR Skill
@@ -26,7 +25,7 @@ GitHub or `gh` against GitLab.
 - `gh` is required for GitHub remotes.
 - `glab` is required for GitLab remotes.
 - If the matching CLI is missing, stop and tell the user exactly what is missing.
-- When the project uses Claude Code settings, prefer `permissions.ask` for mutating
+- When the project uses agent permission settings, prefer `permissions.ask` for mutating
   git and forge commands, including force-push variants.
 
 ## Forge Detection
@@ -129,7 +128,7 @@ inventing results.
 - Never open an interactive PR or MR flow when a non-interactive command is available.
 - Never use `git push --force`, `git push -f`, or `git push --force-with-lease`.
 - Stop if the detector reports `unknown-remote`, `no-remote`, or `no-compatible-cli`.
-- Treat the branch push and PR or MR creation as human-approval actions when the project uses Claude permission rules.
+- Treat the branch push and PR or MR creation as human-approval actions when the project uses agent permission rules.
 
 ## Task
 

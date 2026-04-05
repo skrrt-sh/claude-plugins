@@ -227,7 +227,8 @@ Use the skill-creator to test changes against the eval suites:
 ```
 
 Eval workspaces (`md-writer-workspace/`, `ship-workspace/`) are gitignored —
-they are local artifacts, not committed.
+they are runtime artifacts from running evals, not committed. The eval
+definitions themselves live in `plugins/*/evals/`.
 
 ### Project Layout for Dev Files
 

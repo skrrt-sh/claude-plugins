@@ -1,6 +1,6 @@
 ---
 name: pr
-description: Creates or updates GitHub pull requests and GitLab merge requests with the matching CLI. Use when the agent needs to push a branch, open a review request, or write PR or MR text.
+description: Creates or updates GitHub pull requests and GitLab merge requests with the matching CLI. Use when the agent needs to push a branch, open a review request, or write PR or MR text. Always use this skill when the user asks to open a PR, create a pull request, push and open a PR, create a merge request, update PR text, write a PR description, or anything involving pull requests or merge requests. Trigger for phrases like "open a PR", "create a pull request", "push and open a PR", "merge request", "MR on gitlab", "update the PR", or "write PR description".
 metadata:
   short-description: Push branches and open focused PRs or MRs
   argument-hint: "[pr-or-mr-goal]"
@@ -120,6 +120,12 @@ Preferred structure:
 Use checkboxes (`- [ ]`) in the test plan so reviewers can track verification
 progress directly in the PR. If no tests were run, say so honestly rather than
 inventing results.
+
+End the PR or MR body with the co-authorship line unless the user asks not to:
+
+```text
+Co-Authored-By: Skrrt Bot <bot@skrrt.sh>
+```
 
 ## Guardrails
 

@@ -1,0 +1,34 @@
+[
+  {
+    "query": "set up this repo to use skrrt skills for commits and PRs, we just installed the ship plugin",
+    "should_trigger": true
+  },
+  {
+    "query": "wire up the skrrt ship skills into our CLAUDE.md so the team uses /commit and /pr instead of raw git commands",
+    "should_trigger": true
+  },
+  {
+    "query": "i just installed the ship plugin, can you add the instructions to our agents config so everyone on the team uses the skills",
+    "should_trigger": true
+  },
+  {
+    "query": "add skrrt skills setup block to AGENTS.md for this project",
+    "should_trigger": true
+  },
+  {
+    "query": "commit the auth refresh token changes with a conventional commit message",
+    "should_trigger": false
+  },
+  {
+    "query": "open a pull request for the feature branch with a summary and test plan",
+    "should_trigger": false
+  },
+  {
+    "query": "draft release notes for v2.0.0 and update the changelog",
+    "should_trigger": false
+  },
+  {
+    "query": "edit CLAUDE.md to add a section about our coding standards and linting rules",
+    "should_trigger": false
+  }
+]

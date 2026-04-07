@@ -24,9 +24,15 @@ similar reference material where metadata aids discovery and navigation.
 - `CODE_OF_CONDUCT.md`
 - `SECURITY.md`
 - `LICENSE.md`
+- `GOVERNANCE.md`
 - `CLAUDE.md` / `AGENTS.md`
 - `SUPPORT.md`
-- `PULL_REQUEST_TEMPLATE.md` / `ISSUE_TEMPLATE.md`
+- `SKILL.md` (has its own frontmatter schema)
+- `PULL_REQUEST_TEMPLATE.md` and files under `.github/PULL_REQUEST_TEMPLATE/`
+- `ISSUE_TEMPLATE.md` and files under `.github/ISSUE_TEMPLATE/`
+
+These files may also live under `.github/` (e.g., `.github/CONTRIBUTING.md`,
+`.github/PULL_REQUEST_TEMPLATE.md`) — skip frontmatter there too.
 
 These files have established formats that readers and tools expect — adding frontmatter
 would break conventions and clutter the top of the file.

@@ -21,6 +21,13 @@
       "expected_output": "Release notes with What's Changed sections (Features, Fixes, Internal), a compare link, and changelog update if applicable.",
       "files": [],
       "skill": "ship:release"
+    },
+    {
+      "id": 4,
+      "prompt": "Set up this project to use skrrt skills for commits, PRs, and releases. The project has a CLAUDE.md in the root.",
+      "expected_output": "The setup block appended to CLAUDE.md with the skrrt:ship marker, referencing /commit, /pr, and /release skills.",
+      "files": [],
+      "skill": "ship:setup"
     }
   ]
 }

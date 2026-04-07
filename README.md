@@ -14,6 +14,7 @@ related:
   - "./plugins/ship/skills/commit/SKILL.md"
   - "./plugins/ship/skills/pr/SKILL.md"
   - "./plugins/ship/skills/release/SKILL.md"
+  - "./plugins/ship/skills/setup/SKILL.md"
 audience: ["external-developers", "backend-team", "frontend-team"]
 ---
 
@@ -117,7 +118,7 @@ matching forge CLI.
 - Uses the `vivaxy/vscode-conventional-commits` commit shape
 - Uses upstream conventional commit type titles and descriptions
 - Uses the same gitmoji dataset version referenced by that repo
-- Splits work into dedicated `commit`, `pr`, and `release` skills
+- Splits work into dedicated `commit`, `pr`, `release`, and `setup` skills
 - Detects whether the repo is hosted on GitHub or GitLab before choosing `gh` or `glab`
 - Bundles skill-local forge-detection scripts for portable execution
 - Documents a conservative `git` command subset for status, staging, commit, push, and release workflows
@@ -129,9 +130,10 @@ matching forge CLI.
 **Usage:**
 
 ```text
-/ship:commit prepare a clean conventional commit for the auth refresh-token changes
-/ship:pr open a review request for the auth refresh-token branch
-/ship:release draft release notes for v1.4.0
+/commit prepare a clean conventional commit for the auth refresh-token changes
+/pr open a review request for the auth refresh-token branch
+/release draft release notes for v1.4.0
+/setup wire skrrt skills into this project
 ```
 
 Or ask Claude to commit work, open a PR or MR, or prepare a release.
@@ -197,10 +199,12 @@ skills/
 │           │   ├── SKILL.md
 │           │   └── scripts/
 │           │       └── detect-forge-cli.sh
-│           └── release/
-│               ├── SKILL.md
-│               └── scripts/
-│                   └── detect-forge-cli.sh
+│           ├── release/
+│           │   ├── SKILL.md
+│           │   └── scripts/
+│           │       └── detect-forge-cli.sh
+│           └── setup/
+│               └── SKILL.md
 └── README.md
 ```
 

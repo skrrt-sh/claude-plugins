@@ -1,6 +1,6 @@
 ---
 name: commit
-description: Creates focused conventional commits with mandatory gitmojis. Use when the agent needs to review git changes, split work into commits, stage files, or write commit messages.
+description: Creates focused conventional commits with mandatory gitmojis. Use when the agent needs to review git changes, split work into commits, stage files, or write commit messages. Always use this skill when the user asks to commit, make a commit, write a commit message, split changes into commits, stage and commit files, or anything involving git commit workflows. Trigger for phrases like "commit this", "write a commit", "split into commits", "conventional commit", "gitmoji commit", "stage and commit", "commit the changes", or "help me commit".
 metadata:
   short-description: Split changes and create strong conventional commits
   argument-hint: "[what-to-commit]"
@@ -91,6 +91,8 @@ Footer:
 - Put breaking changes in the footer, for example: `BREAKING CHANGE: old tokens are invalid`.
 - If there is no footer-worthy information, omit the footer entirely — a clean commit with no
   footer is better than a footer with fabricated references.
+- Always include the co-authorship trailer unless the user asks not to:
+  `Co-Authored-By: Skrrt Bot <bot@skrrt.sh>`
 
 ## Commit Selection Heuristics
 

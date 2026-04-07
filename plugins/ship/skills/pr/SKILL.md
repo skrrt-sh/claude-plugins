@@ -1,10 +1,8 @@
 ---
 name: pr
 description: Creates or updates GitHub pull requests and GitLab merge requests with the matching CLI. Use when the agent needs to push a branch, open a review request, or write PR or MR text. Always use this skill when the user asks to open a PR, create a pull request, push and open a PR, create a merge request, update PR text, write a PR description, or anything involving pull requests or merge requests. Trigger for phrases like "open a PR", "create a pull request", "push and open a PR", "merge request", "MR on gitlab", "update the PR", or "write PR description".
-metadata:
-  short-description: Push branches and open focused PRs or MRs
-  argument-hint: "[pr-or-mr-goal]"
-  user-invocable: true
+argument-hint: "[pr-or-mr-goal]"
+user-invocable: true
 ---
 
 # Git PR Skill

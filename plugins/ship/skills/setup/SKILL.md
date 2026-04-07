@@ -1,10 +1,8 @@
 ---
 name: setup
 description: Adds skrrt skills instructions to the current project's CLAUDE.md or AGENTS.md so that commits, PRs, and releases use the ship plugin skills. Use this skill whenever the user wants to set up, configure, install, or wire skrrt skills into a project, add ship plugin instructions to agent config files, or ensure the team uses /commit /pr /release instead of raw git commands. Trigger even when the user says "set up this repo", "add skills to CLAUDE.md", or "configure the ship plugin".
-metadata:
-  short-description: Wire skrrt skills into a project
-  argument-hint: "[options]"
-  user-invocable: true
+argument-hint: "[options]"
+user-invocable: true
 ---
 
 # Ship Setup Skill

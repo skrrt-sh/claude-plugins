@@ -1,10 +1,8 @@
 ---
 name: release
 description: Drafts and publishes GitHub or GitLab releases with curated release notes. Use when the agent needs to prepare release text, compare tags, summarize release changes, or create a release. Always use this skill when the user asks to create a release, draft release notes, publish a release, summarize changes for a version, update a changelog for a release, or anything involving GitHub or GitLab releases. Trigger for phrases like "release notes", "draft a release", "publish release", "create a release", "v1.x.x release", "what changed since last tag", or "prepare release text".
-metadata:
-  short-description: Draft release notes and publish releases safely
-  argument-hint: "[release-goal]"
-  user-invocable: true
+argument-hint: "[release-goal]"
+user-invocable: true
 ---
 
 # Git Release Skill

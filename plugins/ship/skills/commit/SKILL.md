@@ -1,10 +1,8 @@
 ---
 name: commit
 description: Creates focused conventional commits with mandatory gitmojis. Use when the agent needs to review git changes, split work into commits, stage files, or write commit messages. Always use this skill when the user asks to commit, make a commit, write a commit message, split changes into commits, stage and commit files, or anything involving git commit workflows. Trigger for phrases like "commit this", "write a commit", "split into commits", "conventional commit", "gitmoji commit", "stage and commit", "commit the changes", or "help me commit".
-metadata:
-  short-description: Split changes and create strong conventional commits
-  argument-hint: "[what-to-commit]"
-  user-invocable: true
+argument-hint: "[what-to-commit]"
+user-invocable: true
 ---
 
 # Git Commit Skill

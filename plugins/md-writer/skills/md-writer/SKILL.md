@@ -1,10 +1,8 @@
 ---
 name: md-writer
 description: Write well-structured markdown documents with YAML frontmatter, Mermaid diagrams, and markdownlint compliance. Use when creating or editing .md files, writing documentation, guides, specs, or any markdown content.
-metadata:
-  short-description: Automatically handle markdown writing and editing tasks
-  argument-hint: "[topic-or-filename]"
-  user-invocable: true
+argument-hint: "[topic-or-filename]"
+user-invocable: true
 ---
 
 # MD Writer Skill
@@ -15,7 +13,25 @@ You are a markdown documentation writer. Follow these rules strictly when creati
 
 ## YAML Frontmatter
 
-Every markdown file MUST begin with YAML frontmatter.
+Frontmatter is for **knowledge base documents** — guides, specs, ADRs, runbooks, API docs, and
+similar reference material where metadata aids discovery and navigation.
+
+**Skip frontmatter** for well-known repository files that follow universal conventions:
+
+- `README.md` (and variants like `README.*.md`)
+- `CHANGELOG.md` / `CHANGES.md`
+- `CONTRIBUTING.md` / `CONTRIBUTIONS.md`
+- `CODE_OF_CONDUCT.md`
+- `SECURITY.md`
+- `LICENSE.md`
+- `CLAUDE.md` / `AGENTS.md`
+- `SUPPORT.md`
+- `PULL_REQUEST_TEMPLATE.md` / `ISSUE_TEMPLATE.md`
+
+These files have established formats that readers and tools expect — adding frontmatter
+would break conventions and clutter the top of the file.
+
+For all other markdown files, begin with YAML frontmatter.
 
 **Required fields:**
 
@@ -77,7 +93,7 @@ Use `refs` for external links that informed the document.
 - [Link](URL)
 ```
 
-H1 heading MUST match the frontmatter `title`.
+When frontmatter is present, the H1 heading MUST match the frontmatter `title`.
 
 ## Diagrams - Mermaid Only
 
@@ -133,6 +149,9 @@ If your project has a custom `.markdownlint.json` (or `.jsonc`, `.yaml`, `.yml`)
 
 ## Cross-Referencing
 
+Only apply cross-referencing when the current document has frontmatter. Skip this section entirely
+for well-known repo files (README, CHANGELOG, etc.) that do not use frontmatter.
+
 After deciding the document's title, tags, and category — but before writing the body — check for related
 docs and maintain bidirectional links.
 
@@ -140,11 +159,13 @@ docs and maintain bidirectional links.
    per-file reads. Also check files in the same directory.
 2. **Read candidates only** — Read frontmatter of the few files that matched. Confirm genuine overlap: shared
    topic, dependency, or parent/child relationship. Be selective — most files won't qualify.
+   Skip well-known repo files (README, CHANGELOG, etc.) — they are not cross-reference targets.
 3. **Link both ways** — Add relative paths to `related` in the current file and in each matched file.
    **Touch nothing else** in matched files — only append to `related` and bump `updated`.
 
 **Rules:** relative paths only, never duplicate or remove existing `related` entries, add the `related` field
-to frontmatter if it doesn't exist yet.
+to frontmatter if it doesn't exist yet. Do not add frontmatter to well-known repo files listed in the
+skip list above, but do add it to knowledge base docs that are missing it.
 
 ## Task
 

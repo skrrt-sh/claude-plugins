@@ -45,11 +45,17 @@ Only continue when `STATUS=ok`.
 
 ## Workflow
 
-1. Run the forge detection script.
-2. Check the current branch and remote tracking.
-3. Push with upstream if needed.
-4. Summarize the diff before writing the PR or MR.
-5. Use the matched CLI to create or update the review request non-interactively.
+1. **Check the branching strategy** — read the branching block from the agent instruction file
+   (see "Branching Strategy Awareness" below). Determine the correct target branch before
+   proceeding. If no block is found, tell the user to run `/setup` and stop.
+2. Run the forge detection script.
+3. Check the current branch and remote tracking. Validate the current branch is appropriate
+   for the configured strategy (e.g., not `main` for GitHub Flow/TBD, not a feature branch
+   targeting `main` for Gitflow).
+4. Push with upstream if needed.
+5. Summarize the diff before writing the PR or MR.
+6. Use the matched CLI to create or update the review request non-interactively, using
+   `--base` or `--target-branch` with the strategy-determined target.
 
 ## Git Command Subset
 
@@ -58,22 +64,27 @@ Stay within this `git` subset unless the user explicitly asks for more:
 - `git status --short`
 - `git diff --stat`
 - `git branch --show-current`
+- `git branch --list`
 - `git rev-parse --abbrev-ref --symbolic-full-name @{upstream}`
 - `git remote get-url origin`
 - `git push -u origin HEAD`
 - `git log --oneline --decorate -n <count>`
+- `git pull origin <branch>` (for syncing with the target branch)
+- `git pull --rebase origin <branch>` (GitHub Flow / TBD only — for rebasing before PR)
+- `git rebase --continue` (GitHub Flow / TBD only — after resolving rebase conflicts)
+- `git rebase --abort` (GitHub Flow / TBD only — to abandon a failed rebase)
 
 ## CLI Command Subset
 
 For GitHub with `gh`:
 
-- `gh pr create --title <title> --body-file <file>`
+- `gh pr create --title <title> --body-file <file> [--base <branch>]`
 - `gh pr edit --title <title> --body-file <file>`
 - `gh pr view`
 
 For GitLab with `glab`:
 
-- `glab mr create --title <title> --description <body>`
+- `glab mr create --title <title> --description <body> [--target-branch <branch>]`
 - `glab mr update --title <title> --description <body>`
 - `glab mr view`
 
@@ -124,6 +135,34 @@ End the PR or MR body with the co-authorship line unless the user asks not to:
 ```text
 Co-Authored-By: Skrrt Bot <bot@skrrt.sh>
 ```
+
+## Branching Strategy Awareness
+
+Before creating a PR or MR, check the project's agent instruction file for a
+`<!-- skrrt:branching -->` block. Search these locations in order: `CLAUDE.md`, `AGENTS.md`,
+`.claude/CLAUDE.md`, `.github/AGENTS.md`. If present, respect the configured strategy:
+
+- **GitHub Flow**: PRs always target `main`. If the current branch is `main`, stop and tell the
+  user — there is nothing to open a PR for. Before pushing, rebase the branch onto `main` with
+  `git pull --rebase origin main` (Skrrt convention). The PR should be squash merged by the
+  forge (Skrrt convention).
+- **Trunk-Based**: PRs always target `main`. If the current branch is `main`, stop and tell the
+  user — there is nothing to open a PR for. Respect the repository's configured merge strategy.
+- **Gitflow**: PRs for feature branches target `develop`, not `main`. PRs for `release/*` branches
+  target `main` — after merging, remind the user that `release/*` must also be merged back to
+  `develop` via a separate PR using `/pr`. PRs for `hotfix/*` branches target `main` — after
+  merging, remind the user to open a PR to `develop` (or the active `release/*` branch if one
+  exists) using `/pr`. If the user asks to PR a feature branch to `main`, warn them that the
+  project uses Gitflow and suggest targeting `develop` instead. Never rebase under Gitflow — the
+  forge must use `--no-ff` merge commits.
+
+Use the detected target branch when constructing the CLI command. For example:
+
+- GitHub: `gh pr create --base <target>`
+- GitLab: `glab mr create --target-branch <target>`
+
+If no branching strategy block is found, tell the user to run `/setup` to configure a branching
+strategy before proceeding. Do not guess or assume a default target branch.
 
 ## Guardrails
 

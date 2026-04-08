@@ -16,6 +16,34 @@
     "should_trigger": true
   },
   {
+    "query": "configure this project to use GitHub Flow as the branching strategy",
+    "should_trigger": true
+  },
+  {
+    "query": "set up skrrt skills and pick a branching strategy for this repo",
+    "should_trigger": true
+  },
+  {
+    "query": "we use gitflow for this plugin repo, wire that into CLAUDE.md",
+    "should_trigger": true
+  },
+  {
+    "query": "change our branching strategy from gitflow to trunk-based development",
+    "should_trigger": true
+  },
+  {
+    "query": "the branching strategy block is already in CLAUDE.md but I want to switch to github flow",
+    "should_trigger": true
+  },
+  {
+    "query": "set up skrrt skills in this project, there's no CLAUDE.md yet",
+    "should_trigger": true
+  },
+  {
+    "query": "our config is in .claude/CLAUDE.md, add the ship skills and branching strategy there",
+    "should_trigger": true
+  },
+  {
     "query": "commit the auth refresh token changes with a conventional commit message",
     "should_trigger": false
   },
@@ -29,6 +57,10 @@
   },
   {
     "query": "edit CLAUDE.md to add a section about our coding standards and linting rules",
+    "should_trigger": false
+  },
+  {
+    "query": "explain the difference between gitflow and trunk-based development",
     "should_trigger": false
   }
 ]

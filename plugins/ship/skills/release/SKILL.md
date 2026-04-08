@@ -38,13 +38,21 @@ If the repository forge and installed CLI do not match, stop and report the mism
 
 ## Workflow
 
-1. Run the forge detection script.
-2. Inspect tags and commit history to identify the release range.
-3. Check whether the repository has a changelog file such as `CHANGELOG.md`, `Changelog.md`, or `changelog.md`.
-4. Summarize user-facing changes, fixes, and migration notes.
-5. Draft release text in the required house format.
-6. If a changelog file exists, update it for the new release before publishing.
-7. Create the release with the matched CLI only after the text is ready.
+1. **Check the branching strategy** — read the branching block from the agent instruction file
+   (see "Branching Strategy Awareness" below). Determine the correct release flow before
+   proceeding. If no block is found, tell the user to run `/setup` and stop.
+2. Run the forge detection script.
+3. **Validate the release context** per the configured strategy:
+   - GitHub Flow / TBD: verify you are on `main` or the tag points to a `main` commit.
+   - Gitflow: verify the `release/*` branch has been merged to `main`. If the sync-back
+     PR to `develop` has not been opened, remind the user to open one using `/pr`.
+4. Inspect tags and commit history to identify the release range.
+5. Check whether the repository has a changelog file such as `CHANGELOG.md`, `Changelog.md`,
+   or `changelog.md`.
+6. Summarize user-facing changes, fixes, and migration notes.
+7. Draft release text in the required house format.
+8. If a changelog file exists, update it for the new release before publishing.
+9. Create the release with the matched CLI only after the text is ready.
 
 ## Git Command Subset
 
@@ -56,6 +64,10 @@ Stay within this `git` subset unless the user explicitly asks for more:
 - `git diff --stat <range>`
 - `git remote get-url origin`
 - `git diff --name-only <range>`
+- `git branch --show-current`
+- `git branch --list`
+- `git branch --contains <commit>` (to verify a commit is on a specific branch)
+- `git cherry-pick <commit>` (only for TBD just-in-time release branch fixes)
 
 Stay within this file-discovery subset unless the user explicitly asks for more:
 
@@ -125,6 +137,25 @@ Section rules:
 - If the changelog does not follow Keep a Changelog, still preserve the repository's established style.
 - Do not create a brand-new changelog unless the user asks for one.
 - Keep the release text and changelog entry consistent, but adapt the changelog to the repository's existing format.
+
+## Branching Strategy Awareness
+
+Before creating a release, check the project's agent instruction file for a
+`<!-- skrrt:branching -->` block. Search these locations in order: `CLAUDE.md`, `AGENTS.md`,
+`.claude/CLAUDE.md`, `.github/AGENTS.md`. If present, respect the configured strategy:
+
+- **GitHub Flow / Trunk-Based**: Releases are created from tags on `main`. Verify the tag points to
+  a commit on `main` before proceeding.
+- **Gitflow**: Releases follow the `release/*` → `main` promotion flow:
+  1. Verify the `release/*` branch has been merged to `main` via PR.
+  2. Tag the merge commit on `main` and create the release with release notes.
+  3. Remind the user to open a PR from the release branch to `develop` using `/pr` if not
+     already done.
+  If the `release/*` branch has not been merged to `main` yet, stop and tell the user to
+  open a PR from the release branch to `main` first using `/pr`.
+
+If no branching strategy block is found, tell the user to run `/setup` to configure a branching
+strategy before proceeding. Do not guess or assume a default release flow.
 
 ## Guardrails
 

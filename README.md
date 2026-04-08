@@ -116,12 +116,16 @@ skills. The setup skill wires directives into your project's `CLAUDE.md` (or
 `AGENTS.md`) so that Claude automatically uses the ship skills whenever it
 commits, opens a PR/MR, or prepares a release — no slash command needed.
 
+Setup also configures a **branching strategy** (GitHub Flow, Trunk-Based
+Development, or Gitflow) so that all skills respect the correct target branches,
+merge rules, and release workflows.
+
 ```text
 /setup wire skrrt skills into this project
 ```
 
-Without `/setup`, the skills still work when invoked explicitly, but Claude
-won't use them on its own during regular workflow.
+Without `/setup`, the commit, PR, and release skills will prompt you to run
+`/setup` first so that a branching strategy is configured.
 
 **Usage:**
 
@@ -211,8 +215,10 @@ to support the Anthropic recommendation to test skills against representative sc
 │           │       └── detect-forge-cli.sh
 │           └── setup/
 │               ├── SKILL.md
-│               └── evals/
-│                   └── trigger-evals.json
+│               ├── evals/
+│               │   └── trigger-evals.json
+│               └── reference/
+│                   └── branching-strategies.md
 ├── README.md
 ├── LICENSE
 ├── skills-lock.json

@@ -1,6 +1,6 @@
 # Skrrt Plugins
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?logo=opensourceinitiative&logoColor=white)](LICENSE) [![Claude Code](https://img.shields.io/badge/Claude_Code-v1.0.33+-blueviolet?logo=anthropic&logoColor=white)](https://docs.anthropic.com/en/docs/claude-code) [![Version](https://img.shields.io/badge/marketplace-v1.6.0-green?logo=github&logoColor=white)](https://github.com/skrrt-sh/claude-plugins)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?logo=opensourceinitiative&logoColor=white)](LICENSE) [![Claude Code](https://img.shields.io/badge/Claude_Code-v1.0.33+-blueviolet?logo=anthropic&logoColor=white)](https://docs.anthropic.com/en/docs/claude-code) [![Version](https://img.shields.io/badge/marketplace-v1.7.0-green?logo=github&logoColor=white)](https://github.com/skrrt-sh/claude-plugins)
 
 > Marketplace overview for the skrrt-sh plugin catalog, installation flow, and bundled skills.
 

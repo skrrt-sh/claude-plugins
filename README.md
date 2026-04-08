@@ -109,16 +109,30 @@ matching forge CLI.
 - Keeps the skills user-invocable and model-invocable
 - Bundles a recommended Claude Code permissions template with `ask` rules for writes and force-push variants
 
+**Recommended first step — run `/setup`:**
+
+For the best experience, run `/setup` in your project before using the other
+skills. The setup skill wires directives into your project's `CLAUDE.md` (or
+`AGENTS.md`) so that Claude automatically uses the ship skills whenever it
+commits, opens a PR/MR, or prepares a release — no slash command needed.
+
+```text
+/setup wire skrrt skills into this project
+```
+
+Without `/setup`, the skills still work when invoked explicitly, but Claude
+won't use them on its own during regular workflow.
+
 **Usage:**
 
 ```text
 /commit prepare a clean conventional commit for the auth refresh-token changes
 /pr open a review request for the auth refresh-token branch
 /release draft release notes for v1.4.0
-/setup wire skrrt skills into this project
 ```
 
-Or ask Claude to commit work, open a PR or MR, or prepare a release.
+Or — after running `/setup` — just ask Claude to commit work, open a PR or MR,
+or prepare a release and it will use the skills automatically.
 
 **Recommended permissions:**
 

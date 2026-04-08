@@ -1,24 +1,6 @@
----
-title: "Skrrt Plugins"
-description: "Marketplace overview for the skrrt-sh Claude Code plugins and their documentation."
-author: "skrrt-sh"
-created: "2026-04-02"
-updated: "2026-04-04"
-version: "1.0.0"
-status: "published"
-tags: ["plugins", "marketplace", "markdown", "github"]
-category: "guide"
-aliases: ["skrrt-plugins", "plugin-marketplace"]
-related:
-  - "./plugins/md-writer/skills/md-writer/SKILL.md"
-  - "./plugins/ship/skills/commit/SKILL.md"
-  - "./plugins/ship/skills/pr/SKILL.md"
-  - "./plugins/ship/skills/release/SKILL.md"
-  - "./plugins/ship/skills/setup/SKILL.md"
-audience: ["external-developers", "backend-team", "frontend-team"]
----
-
 # Skrrt Plugins
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?logo=opensourceinitiative&logoColor=white)](LICENSE) [![Claude Code](https://img.shields.io/badge/Claude_Code-v1.0.33+-blueviolet?logo=anthropic&logoColor=white)](https://docs.anthropic.com/en/docs/claude-code) [![Version](https://img.shields.io/badge/marketplace-v1.6.0-green?logo=github&logoColor=white)](https://github.com/skrrt-sh/claude-plugins)
 
 > Marketplace overview for the skrrt-sh plugin catalog, installation flow, and bundled skills.
 
@@ -164,27 +146,31 @@ to support the Anthropic recommendation to test skills against representative sc
 ## Repository Structure
 
 ```text
-skills/
+.
 ├── .claude-plugin/
-│   └── marketplace.json         # Marketplace manifest
+│   └── marketplace.json           # Marketplace manifest
 ├── plugins/
-│   ├── md-writer/               # Markdown writer plugin
+│   ├── md-writer/                 # Markdown writer plugin
 │   │   ├── .claude-plugin/
 │   │   │   └── plugin.json
-│   │   ├── skills/
-│   │   │   └── md-writer/
-│   │   │       └── SKILL.md
+│   │   ├── config/
+│   │   │   └── markdownlint-default.json
+│   │   ├── evals/
+│   │   │   └── evals.json
 │   │   ├── hooks/
 │   │   │   ├── hooks.json
 │   │   │   └── validate-md.sh
-│   │   ├── config/
-│   │   │   └── markdownlint-default.json
-│   │   └── package.json
-│   └── ship/                    # Commit, PR or MR, and release workflow plugin
+│   │   ├── skills/
+│   │   │   └── md-writer/
+│   │   │       └── SKILL.md
+│   │   ├── package.json
+│   │   └── package-lock.json
+│   └── ship/                      # Commit, PR or MR, and release workflow plugin
 │       ├── .claude-plugin/
 │       │   └── plugin.json
 │       ├── evals/
 │       │   ├── commit-basic.json
+│       │   ├── evals.json
 │       │   ├── pr-github.json
 │       │   └── release-changelog.json
 │       ├── templates/
@@ -192,20 +178,31 @@ skills/
 │       └── skills/
 │           ├── commit/
 │           │   ├── SKILL.md
+│           │   ├── evals/
+│           │   │   └── trigger-evals.json
 │           │   └── reference/
 │           │       ├── commit-types.md
 │           │       └── gitmojis.md
 │           ├── pr/
 │           │   ├── SKILL.md
+│           │   ├── evals/
+│           │   │   └── trigger-evals.json
 │           │   └── scripts/
 │           │       └── detect-forge-cli.sh
 │           ├── release/
 │           │   ├── SKILL.md
+│           │   ├── evals/
+│           │   │   └── trigger-evals.json
 │           │   └── scripts/
 │           │       └── detect-forge-cli.sh
 │           └── setup/
-│               └── SKILL.md
-└── README.md
+│               ├── SKILL.md
+│               └── evals/
+│                   └── trigger-evals.json
+├── README.md
+├── LICENSE
+├── skills-lock.json
+└── .gitignore
 ```
 
 ## Contributing

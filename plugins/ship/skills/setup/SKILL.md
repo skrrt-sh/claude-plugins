@@ -15,9 +15,10 @@ the skrrt skills ship configuration block, and configure the project's branching
 
 ## Additional Resources
 
-Before asking the user to choose a branching strategy, read:
+Before recommending a branching strategy, read:
 
-- [reference/branching-strategies.md](reference/branching-strategies.md)
+- [reference/branching-strategies.md](reference/branching-strategies.md) — branching models,
+  project analysis signals, tagging and environment strategy, CI/CD trigger patterns
 
 ## Workflow
 
@@ -37,17 +38,31 @@ Before asking the user to choose a branching strategy, read:
 3. **Append the skills block** if the `<!-- skrrt:ship -->` marker is not present. Use the
    exact block from the "Skills Configuration Block" section below.
 
-4. **Select a branching strategy.** If the `<!-- skrrt:branching -->` marker is not present:
-   a. Read the reference file `reference/branching-strategies.md` to understand each strategy.
-   b. **Always ask the user** which branching strategy they want. Present these three options
-      with a brief one-liner for each:
-      - **GitHub Flow** (recommended) — `main` + short-lived branches, PRs, tags for releases.
-        The default for most projects.
-      - **Trunk-Based Development** — `main` + short-lived branches < 2 days, feature
-        flags, tags for releases. For fast-paced projects with mature CI/CD.
-      - **Gitflow** — `main` + `develop` + `release/*` + `hotfix/*`. For plugins/skills where
-        consumers fetch latest `main`, or projects needing release stabilization.
-   c. After the user chooses, append the matching branching strategy block from the
+4. **Analyze the project and recommend a branching strategy.** If the `<!-- skrrt:branching -->`
+   marker is not present:
+   a. Read the reference file `reference/branching-strategies.md` — especially the
+      "Project Analysis Signals" section.
+   b. **Gather signals from the project.** Run the checks described in the reference to
+      understand the project's current state:
+      - Check for `develop`, `release/*`, `hotfix/*` branches (local and remote).
+      - Check for CI/CD configuration files.
+      - Check for feature flag infrastructure.
+      - Check git log for contributor count, deployment frequency (tags/releases), and
+        whether `develop` is actively used or abandoned.
+      - Check if the project is a plugin, skill, or library where consumers track `main`.
+      - Check for long-lived unmerged branches.
+   c. **Make a tailored recommendation** based on the signals. Follow the recommendation
+      logic in the reference. Explain your reasoning — tell the user which signals you
+      found and why they point to the recommended strategy.
+   d. **If the project currently uses a different strategy** (e.g., has a `develop` branch
+      but you recommend GitHub Flow), explain what migration would involve and why the
+      switch is worth it. Do not recommend preserving a strategy just because it is
+      already in use.
+   e. **Present the recommendation to the user** with all three options visible, but mark
+      your recommended option. The user always has the final say. Present:
+      - Your recommended strategy with reasoning (marked as recommended).
+      - The other two strategies with their one-liners for context.
+   f. After the user chooses, append the matching branching strategy block from the
       "Branching Strategy Blocks" section below.
 
    If the marker already exists, detect which strategy is configured by reading the heading
@@ -55,7 +70,21 @@ Before asking the user to choose a branching strategy, read:
    `## Branching strategy — GitHub Flow`). Tell the user which strategy is set and offer to
    replace it if they want a different one.
 
-5. **Report what you did.** Summarize which file was updated and which blocks were added.
+5. **Configure environment tiers.** After appending the branching strategy block:
+   a. The default environment tiers (dev, staging, production) are already included in
+      each strategy block. Tell the user about the default tier model.
+   b. Ask the user if they have additional environments beyond the default three
+      (e.g., QA, UAT, pre-prod). If yes, note the custom environments — the tagging
+      convention supports them via `vX.Y.Z-{env}.N` labels.
+   c. If the user has custom environments, mention that their CI/CD pipelines should
+      parse the tag suffix to determine the deployment target (see the reference file
+      for CI pattern matching examples).
+   d. Do not modify the strategy block for custom environments — the block already
+      describes the extension pattern. Custom environment CI configuration is the
+      user's responsibility.
+
+6. **Report what you did.** Summarize which file was updated, which blocks were added, and
+   the configured environment model (default tiers or custom tiers noted).
 
 ## Skills Configuration Block
 
@@ -73,6 +102,16 @@ Use the installed skrrt skills for all git shipping operations:
 
 Do not write raw `git commit`, `gh pr create`, `gh release create`, `glab mr create`, or
 `glab release create` commands manually when these skills are available.
+
+### Deployment conventions (Skrrt)
+
+These rules apply regardless of branching strategy:
+
+- **Tag format:** `vX.Y.Z` (production), `vX.Y.Z-rc.N` (release candidate), `vX.Y.Z-{env}.N` (custom tier). Always use annotated tags.
+- **Tags are immutable.** Never delete or move a tag. If a release is bad, cut a new patch version.
+- **Build once, promote the same artifact.** The artifact tested in staging must be identical to what reaches production. Never rebuild from a tag.
+- **Lower environments do not need tags.** Dev deploys from branch HEAD on merge. Preview environments are per-PR and SHA-scoped.
+- **Manual `workflow_dispatch`** can promote an existing artifact to any environment. It complements the tag-driven flow, not replaces it.
 ```
 
 ## Branching Strategy Blocks
@@ -117,6 +156,19 @@ Use `<type>/<short-description>` with lowercase and hyphens:
 - Use **squash merge** — each PR becomes one clean commit on `main`.
 - This keeps `main` history linear: one commit = one PR = one logical change.
 
+### Tagging and environment (Skrrt convention)
+
+Tags are placed **on `main` only** — never on feature branches. See shared deployment conventions above.
+
+| Environment | Trigger | Tag? |
+| --- | --- | --- |
+| Dev | Merge to `main` (squash merge) | No |
+| Staging | Tag `vX.Y.Z-rc.N` on `main` | Yes |
+| Production | Tag `vX.Y.Z` on `main` | Yes |
+
+- Promote to staging by tagging an RC on `main`. If it fails, merge fixes via PR and tag a new RC.
+- Promote to production by tagging a clean semver release on the validated commit.
+
 ### Agent lifecycle (full auto)
 
 1. Create a branch from `main`: `git switch -c <type>/<description>`
@@ -124,7 +176,8 @@ Use `<type>/<short-description>` with lowercase and hyphens:
 3. Before opening a PR, rebase onto `main`: `git pull --rebase origin main`
 4. Push and open a PR using `/pr` — target is always `main`.
 5. After squash merge, the branch is deleted automatically by the forge.
-6. To release, tag a commit on `main` using `/release`.
+6. To promote to staging, tag an RC on `main`: use `/release` with a pre-release tag.
+7. After staging validation, tag the production release on `main`: use `/release`.
 <!-- /skrrt:branching -->
 ```
 
@@ -168,13 +221,31 @@ Use `<type>/<short-description>` with lowercase and hyphens:
 - Respect the repository's configured merge strategy in the forge settings.
 - TBD has no strong opinion on merge strategy — branches are so short-lived it rarely matters.
 
+### Tagging and environment (Skrrt convention)
+
+Tags are placed **on `main` only**. Deploy ≠ Release — feature flags control rollout independently. See shared deployment conventions above.
+
+- **Cadence determines tagging:**
+  - High cadence (multiple deploys/day): tagging is optional — every merge to `main` may go straight to production.
+  - Medium cadence (weekly/monthly): use RC and release tags to mark promotion milestones.
+
+| Environment | Trigger | Tag? |
+| --- | --- | --- |
+| Dev | Merge to `main` | No |
+| Staging | Tag `vX.Y.Z-rc.N` on `main` | Yes (medium cadence) |
+| Production | Tag `vX.Y.Z` on `main` | Yes (medium cadence) |
+
+- Just-in-time `release/*` branches, if used, may carry their own RC tags.
+- Fixes for release branches: reproduce on `main`, fix on `main`, cherry-pick to the release branch. Never fix on the release branch first.
+
 ### Agent lifecycle (full auto)
 
 1. Create a branch from `main`: `git switch -c <type>/<description>`
 2. Make small, incremental changes and commit using `/commit`.
 3. Push and open a PR using `/pr` — target is always `main`.
 4. After PR merge, the branch is deleted automatically by the forge.
-5. To release, tag a commit on `main` using `/release`.
+5. **If using tag-based promotions** (medium cadence): tag an RC on `main` using `/release` with a pre-release tag, then after staging validation, tag the production release using `/release`.
+6. **If using continuous deployment** (high cadence): merge to `main` is the production deploy — no tags needed.
 <!-- /skrrt:branching -->
 ```
 
@@ -218,6 +289,24 @@ This project uses **Gitflow**. All agents and contributors must follow these rul
 - Do not squash or rebase merge — Gitflow requires visible merge points to preserve branch history.
 - The forge's merge strategy should be configured to use merge commits only.
 
+### Tagging and environment (Skrrt convention)
+
+See shared deployment conventions above. Gitflow has strategy-specific tag placement:
+
+- **Production tags** (`vX.Y.Z`) go on `main` only, at the merge commit from `release/*` or `hotfix/*`. Every merge to `main` is immediately tagged — mandatory.
+- **RC tags** (`vX.Y.Z-rc.N`) go on `release/*` branches during stabilization. This is the only exception to the main-only rule. RCs mark validation milestones but do not trigger separate deploys.
+- **Custom env tags** (`vX.Y.Z-{env}.N`) in Gitflow go on `release/*` branches as milestone labels.
+
+| Environment | Trigger | Tag? |
+| --- | --- | --- |
+| Dev | Merge to `develop` | No |
+| Staging | Push to `release/*` branch | No (branch-triggered) |
+| Production | Tag `vX.Y.Z` on `main` | Yes |
+
+- `develop` auto-deploys to dev — the integration environment.
+- `release/*` deploys to staging on every push. The release branch IS the staging gate.
+- `hotfix/*` may deploy to staging for validation before merging to `main`.
+
 ### Agent lifecycle — features (full auto)
 
 1. Switch to `develop`: `git switch develop && git pull`
@@ -230,10 +319,11 @@ This project uses **Gitflow**. All agents and contributors must follow these rul
 
 1. Cut a release branch from `develop`: `git switch develop && git pull && git switch -c release/<version>`
 2. Perform stabilization (bug fixes, version bumps) and commit using `/commit`.
-3. When stable, open a PR from `release/<version>` to `main` using `/pr`.
-4. After PR merge (`--no-ff`), tag the merge commit: use `/release` to create the tag and release notes.
-5. Open a PR from `release/<version>` to `develop` using `/pr` to sync the stabilization changes back.
-6. After PR merge, the release branch is deleted by the forge.
+3. Optionally tag RC milestones on the release branch: `v1.2.3-rc.1` (marks a validation checkpoint; staging deploys are branch-triggered, not tag-triggered).
+4. When stable, open a PR from `release/<version>` to `main` using `/pr`.
+5. After PR merge (`--no-ff`), tag the merge commit: use `/release` to create the tag (`vX.Y.Z`) and release notes.
+6. Open a PR from `release/<version>` to `develop` using `/pr` to sync the stabilization changes back.
+7. After PR merge, the release branch is deleted by the forge.
 
 ### Agent lifecycle — hotfixes (full auto)
 
@@ -264,8 +354,10 @@ If the user wants to change the branching strategy:
 - Only append new blocks; do not insert in the middle of the file (except when replacing a branching block).
 - If a marker already exists, do not duplicate its block.
 - Do not create files other than the instruction file.
-- Always ask the user to choose a branching strategy — never auto-select.
-- Present all three options with their one-liner descriptions so the user can make an informed choice.
+- Always analyze the project before recommending a branching strategy — never use a static default.
+- Always present the recommendation with reasoning, but let the user make the final choice.
+- Never recommend preserving a strategy solely because it is already in use — recommend what is best for the project now.
+- Present all three options so the user can override the recommendation if they disagree.
 
 ## Task
 

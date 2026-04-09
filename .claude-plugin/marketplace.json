@@ -1,6 +1,6 @@
 {
   "name": "skrrt-plugins",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "Agent skills by skrrt-sh — documentation, developer workflows, and productivity tools",
   "owner": {
     "name": "skrrt-sh",
@@ -21,7 +21,7 @@
     {
       "name": "ship",
       "description": "Create conventional commits with gitmojis, open PRs or MRs, and publish releases with the matching forge CLI",
-      "version": "1.7.0",
+      "version": "1.8.0",
       "source": "./plugins/ship",
       "category": "developer-workflow",
       "keywords": ["git", "github", "gitlab", "conventional-commits", "gitmoji", "pull-request", "release"]

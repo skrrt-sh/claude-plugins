@@ -70,6 +70,8 @@ Stay within this `git` subset unless the user explicitly asks for more:
 - `git push -u origin HEAD`
 - `git log --oneline --decorate -n <count>`
 - `git pull origin <branch>` (for syncing with the target branch)
+- `git switch -c <branch>` (for creating branches when the strategy requires it)
+- `git switch <branch>` (for switching to an existing branch)
 - `git pull --rebase origin <branch>` (GitHub Flow / TBD only — for rebasing before PR)
 - `git rebase --continue` (GitHub Flow / TBD only — after resolving rebase conflicts)
 - `git rebase --abort` (GitHub Flow / TBD only — to abandon a failed rebase)
@@ -80,13 +82,18 @@ For GitHub with `gh`:
 
 - `gh pr create --title <title> --body-file <file> [--base <branch>]`
 - `gh pr edit --title <title> --body-file <file>`
+- `gh pr edit <number> --repo <owner/repo> --body-file <file>` (for correlated PR updates)
 - `gh pr view`
+- `gh pr view --json state`
+- `gh pr list --repo <owner/repo> --state open --json number,title,headRefName --limit <count>`
 
 For GitLab with `glab`:
 
 - `glab mr create --title <title> --description <body> [--target-branch <branch>]`
 - `glab mr update --title <title> --description <body>`
+- `glab mr update <number> --repo <group/project> --description <body>` (for correlated MR updates)
 - `glab mr view`
+- `glab mr list --repo <owner/repo> --state opened`
 
 Prefer explicit non-interactive commands.
 
@@ -122,9 +129,15 @@ Preferred structure:
 - [ ] ...
 - [ ] ...
 
+## Related PRs
+- **depends on** owner/repo#N — short description
+- **related to** owner/repo#N — short description
+
 ## Notes
 - ...
 ```
+
+Omit the `## Related PRs` section when the PR is standalone.
 
 Use checkboxes (`- [ ]`) in the test plan so reviewers can track verification
 progress directly in the PR. If no tests were run, say so honestly rather than
@@ -142,12 +155,13 @@ Before creating a PR or MR, check the project's agent instruction file for a
 `<!-- skrrt:branching -->` block. Search these locations in order: `CLAUDE.md`, `AGENTS.md`,
 `.claude/CLAUDE.md`, `.github/AGENTS.md`. If present, respect the configured strategy:
 
-- **GitHub Flow**: PRs always target `main`. If the current branch is `main`, stop and tell the
-  user — there is nothing to open a PR for. Before pushing, rebase the branch onto `main` with
+- **GitHub Flow**: PRs always target `main`. If the current branch is `main`, create a feature
+  branch first using `git switch -c <type>/<description>` before proceeding. Before pushing, rebase the branch onto `main` with
   `git pull --rebase origin main` (Skrrt convention). The PR should be squash merged by the
   forge (Skrrt convention).
-- **Trunk-Based**: PRs always target `main`. If the current branch is `main`, stop and tell the
-  user — there is nothing to open a PR for. Respect the repository's configured merge strategy.
+- **Trunk-Based**: PRs always target `main`. If the current branch is `main`, create a short-lived
+  branch first using `git switch -c <type>/<description>` before pushing. Before creating a new
+  branch. Respect the repository's configured merge strategy.
 - **Gitflow**: PRs for feature branches target `develop`, not `main`. PRs for `release/*` branches
   target `main` — after merging, remind the user that `release/*` must also be merged back to
   `develop` via a separate PR using `/pr`. PRs for `hotfix/*` branches target `main` — after
@@ -163,6 +177,79 @@ Use the detected target branch when constructing the CLI command. For example:
 
 If no branching strategy block is found, tell the user to run `/setup` to configure a branching
 strategy before proceeding. Do not guess or assume a default target branch.
+
+## Correlated PRs
+
+When a feature spans multiple repositories in a workspace or multiple apps/services inside
+a monorepo, the PRs form a **correlated set**. Detect this when:
+
+- The user mentions changes across multiple repos or services in the same task.
+- The user explicitly says PRs are related or dependent.
+- The working directory is a monorepo and changes touch multiple independently deployable
+  apps or packages.
+
+For every PR in a correlated set:
+
+1. Add a `## Related PRs` section to the PR body, after the test plan and before notes.
+2. List each sibling PR using the forge link format with a dependency label:
+
+GitHub example:
+
+```markdown
+## Related PRs
+- **depends on** owner/repo#42 — API schema changes (must merge first)
+- **required by** owner/other-repo#58 — frontend consumer
+- **related to** owner/repo#43 — shared config update (no strict order)
+```
+
+GitLab example:
+
+```markdown
+## Related MRs
+- **depends on** group/project!42 — API schema changes (must merge first)
+- **related to** group/project!43 — shared config update (no strict order)
+```
+
+Dependency labels:
+
+| Label | Meaning |
+|-------|---------|
+| `depends on` | This PR requires the linked PR to merge first |
+| `required by` | The linked PR requires this one to merge first |
+| `related to` | Sibling PRs with no strict merge ordering |
+
+Rules:
+
+- Use the correct forge reference format: GitHub `owner/repo#N`, GitLab `group/project!N`.
+- When updating an existing PR in a correlated set (e.g., after a sibling is opened),
+  update the related-PRs section of all open siblings to keep references bidirectional.
+- If the user provides merge-order constraints, respect them. If not, default to
+  `related to` — do not invent dependency order.
+- When a correlated PR merges, note it in the remaining siblings' related-PRs section
+  as merged (e.g., `~~depends on owner/repo#42~~ — merged`).
+
+To list open PRs across repos for cross-referencing, the following commands are allowed:
+
+- GitHub: `gh pr list --repo <owner/repo> --state open --json number,title,headRefName --limit 10`
+- GitLab: `glab mr list --repo <owner/repo> --state opened`
+
+## PR Follow-Up
+
+When the user reports problems after a PR was already created, check the PR state before
+making any changes:
+
+1. Run `gh pr view --json state` (GitHub) or `glab mr view` (GitLab) to determine whether
+   the PR is open, merged, or closed.
+2. **PR is still open** — stay on (or switch to) the PR's source branch, commit fixes using
+   `/commit`, and push. The existing PR updates automatically. Do not create a new PR.
+3. **PR was merged** — switch to `main`, run `git pull origin main`, create a new short-lived
+   branch from the updated `main`, apply fixes, and open a new PR using this skill. Do not
+   attempt to reuse a branch that the forge already deleted after merge.
+4. **PR was closed without merge** — stop and ask the user whether to reopen the existing
+   branch or start a fresh one.
+
+If the agent is on `main` when the user references a PR problem, identify the PR's source
+branch and switch to it before committing (for open PRs).
 
 ## Guardrails
 

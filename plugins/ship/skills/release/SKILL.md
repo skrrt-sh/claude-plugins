@@ -44,6 +44,8 @@ If the repository forge and installed CLI do not match, stop and report the mism
 2. Run the forge detection script.
 3. **Validate the release context** per the configured strategy:
    - GitHub Flow / TBD: verify you are on `main` or the tag points to a `main` commit.
+     If the current branch is not `main`, switch to `main` and pull the latest before
+     tagging or publishing.
    - Gitflow: verify the `release/*` branch has been merged to `main`. If the sync-back
      PR to `develop` has not been opened, remind the user to open one using `/pr`.
 4. Inspect tags and commit history to identify the release range.
@@ -66,6 +68,8 @@ Stay within this `git` subset unless the user explicitly asks for more:
 - `git diff --name-only <range>`
 - `git branch --show-current`
 - `git branch --list`
+- `git switch <branch>` (for switching to `main` before tagging)
+- `git pull origin <branch>` (for syncing `main` before release)
 - `git branch --contains <commit>` (to verify a commit is on a specific branch)
 - `git cherry-pick <commit>` (only for TBD just-in-time release branch fixes)
 

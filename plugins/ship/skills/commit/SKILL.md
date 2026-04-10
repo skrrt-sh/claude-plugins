@@ -46,8 +46,8 @@ Stay within this safe `git` subset unless the user explicitly asks for something
 - `git add -- <path>`
 - `git add -p -- <path>`
 - `git restore --staged -- <path>`
-- `git commit --file <file>`
-- `git commit --message <header>`
+- `git commit --file <file>` (preferred — supports header + body)
+- `git commit --message <header>` (only for follow-up fixups when explicitly body-less)
 - `git branch --show-current`
 - `git branch --list` (for checking active branches, e.g., Gitflow release detection)
 - `git switch -c <branch>` (for creating branches when the strategy requires it)
@@ -120,9 +120,9 @@ Before committing, check the project's agent instruction file for a `<!-- skrrt:
 block. Search these locations in order: `CLAUDE.md`, `AGENTS.md`, `.claude/CLAUDE.md`,
 `.github/AGENTS.md`. If present, respect the configured strategy:
 
-- **GitHub Flow**: You should be on a feature branch, not `main`. If on `main`, stop and tell
-  the user to create a feature branch first — GitHub Flow requires all changes to reach `main`
-  through a pull request.
+- **GitHub Flow**: You should be on a feature branch, not `main`. If on `main`, create a feature
+  branch first using `git switch -c <type>/<description>` — GitHub Flow requires all changes to
+  reach `main` through a pull request.
 - **Trunk-Based**: Agents always work on short-lived branches, never commit directly to `main`.
   If on `main`, create a short-lived branch first using `git switch -c <type>/<description>`.
   On a short-lived branch, proceed normally.
@@ -137,6 +137,23 @@ block. Search these locations in order: `CLAUDE.md`, `AGENTS.md`, `.claude/CLAUD
 
 If no branching strategy block is found, tell the user to run `/setup` to configure a branching
 strategy before proceeding. Do not guess or assume a default.
+
+## PR Follow-Up Awareness
+
+When the user asks to commit a fix for a problem reported on an existing PR, verify the
+PR state before committing:
+
+1. Run `gh pr view --json state` (GitHub) or `glab mr view` (GitLab) to check whether the
+   PR is open, merged, or closed.
+2. **PR is still open** — stay on (or switch to) the PR's source branch and commit the fix.
+   The push will update the existing PR.
+3. **PR was merged** — switch to `main`, pull the latest with `git pull origin main`, and
+   create a new short-lived branch before committing. A new PR will be needed afterward.
+4. **PR was closed without merge** — stop and ask the user whether to reopen the old branch
+   or start fresh.
+
+If the agent is currently on `main` when the user references a PR problem, identify the
+PR's source branch and switch to it before committing (if the PR is still open).
 
 ## Guardrails
 

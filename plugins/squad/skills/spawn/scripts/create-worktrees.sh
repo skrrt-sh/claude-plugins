@@ -23,6 +23,12 @@ command -v jq  >/dev/null 2>&1 || err "jq not on PATH"
 manifest="$1"
 [ -f "$manifest" ] || err "manifest not found: $manifest"
 
+# Refuse to run from inside a linked worktree — primary checkout only,
+# otherwise run_dir + wt_root would resolve relative to the wrong tree.
+git_dir=$(cd "$(git rev-parse --git-dir)" && pwd)
+git_common_dir=$(cd "$(git rev-parse --git-common-dir)" && pwd)
+[ "$git_dir" = "$git_common_dir" ] || err "run from the primary worktree, not a linked worktree: $(git rev-parse --show-toplevel)"
+
 repo_root="$(git rev-parse --show-toplevel)"
 run_id=$(jq -r '.run_id' "$manifest")
 base_ref=$(jq -r '.base_ref' "$manifest")
@@ -66,6 +72,22 @@ fi
 
 entries_json="{}"
 
+# Roll back any partial state if we fail mid-loop — worktree-map.json
+# isn't written until the end, so cleanup-worktrees.sh can't help us.
+created_paths=()
+created_branches=()
+rollback() {
+  local p b
+  for p in "${created_paths[@]-}"; do
+    [ -n "$p" ] && git worktree remove --force "$p" >/dev/null 2>&1 || true
+  done
+  for b in "${created_branches[@]-}"; do
+    [ -n "$b" ] && git branch -D "$b" >/dev/null 2>&1 || true
+  done
+  git worktree prune >/dev/null 2>&1 || true
+}
+trap 'rc=$?; [ $rc -ne 0 ] && rollback; exit $rc' EXIT
+
 task_ids=$(jq -r '.tasks[].id' "$manifest")
 for tid in $task_ids; do
   branch="squad/$run_id/$tid"
@@ -75,6 +97,8 @@ for tid in $task_ids; do
   ! git show-ref --verify --quiet "refs/heads/$branch" || err "branch already exists: $branch"
 
   git worktree add "$wt_path" -b "$branch" "$base_ref" >/dev/null
+  created_paths+=("$wt_path")
+  created_branches+=("$branch")
 
   # Sparse paths.
   if [ "$(jq 'length' <<<"$sparse_paths_json")" -gt 0 ]; then

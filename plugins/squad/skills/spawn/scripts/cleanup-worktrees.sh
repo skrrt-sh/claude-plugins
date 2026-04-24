@@ -16,6 +16,13 @@ command -v jq  >/dev/null 2>&1 || err "jq not on PATH"
 [ $# -eq 1 ] || err "usage: cleanup-worktrees.sh <run-id>"
 run_id="$1"
 
+# Refuse to run from inside a linked worktree — we'd resolve run_dir
+# against the wrong tree and refuse to touch squad/-prefixed branches
+# that live on the primary checkout.
+git_dir=$(cd "$(git rev-parse --git-dir)" && pwd)
+git_common_dir=$(cd "$(git rev-parse --git-common-dir)" && pwd)
+[ "$git_dir" = "$git_common_dir" ] || err "run from the primary worktree, not a linked worktree: $(git rev-parse --show-toplevel)"
+
 repo_root="$(git rev-parse --show-toplevel)"
 run_dir="$repo_root/.claude/squad/runs/$run_id"
 map_file="$run_dir/worktree-map.json"

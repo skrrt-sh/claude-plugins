@@ -87,6 +87,14 @@ parent checkout is still on whatever branch the user started from.
 Switching early would let any shared-cwd child contaminate integration
 (we don't have shared-cwd tasks in v0.1.0, but the ordering matters).
 
+If the branch already exists (a prior run was interrupted after this
+step but before cleanup): resolve its tip with
+`git rev-parse squad/<run-id>/integration`. If it points at `base_ref`,
+reuse it and skip the create. If it points anywhere else, refuse with:
+`squad/<run-id>/integration already exists at <sha> (expected <base_ref>).
+Delete it manually or rerun /squad:decompose to generate a fresh run id.`
+Never force-update.
+
 ### 4. Dispatch children in groups
 
 Compute dispatch groups by Kahn's algorithm on `dependencies`:

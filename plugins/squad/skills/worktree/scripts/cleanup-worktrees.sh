@@ -1,0 +1,98 @@
+#!/usr/bin/env bash
+# cleanup-worktrees.sh — remove squad worktrees and squad-prefixed branches
+# for a given run.
+#
+# Usage:
+#   cleanup-worktrees.sh <run-id>
+#
+# Loads `.claude/squad/runs/<run-id>/worktree-map.json`, confirms each
+# worktree is clean (`git status --short` empty), removes the worktree,
+# deletes the matching `squad/<run-id>/<task-id>` branch, prunes the
+# `refs/squad-incoming/<run-id>/<task-id>` ref if present, and archives the
+# run directory under `.claude/squad/runs/_archived/<run-id>-<ts>/`.
+#
+# Refuses to --force anything. Dirty worktrees escalate — the user must
+# resolve manually.
+
+set -euo pipefail
+
+err() { printf 'error: %s\n' "$*" >&2; exit 1; }
+warn() { printf 'warn: %s\n' "$*" >&2; }
+
+command -v git >/dev/null 2>&1 || err "git not on PATH"
+command -v jq  >/dev/null 2>&1 || err "jq not on PATH"
+
+[ $# -eq 1 ] || err "usage: cleanup-worktrees.sh <run-id>"
+
+run_id="$1"
+repo_root="$(git rev-parse --show-toplevel)"
+run_dir="$repo_root/.claude/squad/runs/$run_id"
+map_file="$run_dir/worktree-map.json"
+
+[ -d "$run_dir" ] || err "run directory not found: $run_dir"
+[ -f "$map_file" ] || err "worktree map not found: $map_file"
+
+# Gather task_ids from the map.
+task_ids=$(jq -r '.entries | keys[]' "$map_file")
+
+# Dry-run check: any dirty worktree aborts cleanup before we change state.
+for tid in $task_ids; do
+  wt_path=$(jq -r --arg t "$tid" '.entries[$t].worktree_path' "$map_file")
+  branch_name=$(jq -r --arg t "$tid" '.entries[$t].branch_name' "$map_file")
+
+  case "$branch_name" in
+    squad/*) ;;
+    *) err "refusing to touch non-squad branch: $branch_name" ;;
+  esac
+
+  if [ ! -d "$wt_path" ]; then
+    warn "worktree already gone: $wt_path (task $tid)"
+    continue
+  fi
+
+  dirty=$(git -C "$wt_path" status --short 2>/dev/null || true)
+  if [ -n "$dirty" ]; then
+    printf 'error: worktree is dirty: %s (task %s)\n%s\n' "$wt_path" "$tid" "$dirty" >&2
+    exit 2
+  fi
+done
+
+# Second pass: actually remove.
+for tid in $task_ids; do
+  wt_path=$(jq -r --arg t "$tid" '.entries[$t].worktree_path' "$map_file")
+  branch_name=$(jq -r --arg t "$tid" '.entries[$t].branch_name' "$map_file")
+
+  if [ -d "$wt_path" ]; then
+    git worktree remove "$wt_path" >/dev/null
+    printf 'removed worktree: %s\n' "$wt_path"
+  fi
+
+  if git show-ref --verify --quiet "refs/heads/$branch_name"; then
+    git branch -D "$branch_name" >/dev/null
+    printf 'deleted branch:   %s\n' "$branch_name"
+  fi
+
+  incoming_ref="refs/squad-incoming/$run_id/$tid"
+  if git show-ref --verify --quiet "$incoming_ref"; then
+    git update-ref -d "$incoming_ref"
+    printf 'pruned incoming ref: %s\n' "$incoming_ref"
+  fi
+done
+
+# Prune empty worktree parent dir if empty.
+parent_dir=$(dirname "$repo_root")
+repo_name=$(basename "$repo_root")
+wt_parent="$parent_dir/${repo_name}-worktrees"
+if [ -d "$wt_parent" ] && [ -z "$(ls -A "$wt_parent" 2>/dev/null)" ]; then
+  rmdir "$wt_parent"
+  printf 'pruned empty worktree parent: %s\n' "$wt_parent"
+fi
+
+# Archive the run directory.
+archived_root="$repo_root/.claude/squad/runs/_archived"
+mkdir -p "$archived_root"
+ts="$(date -u +%Y%m%dT%H%M%SZ)"
+mv "$run_dir" "$archived_root/${run_id}-${ts}"
+printf 'archived run dir: %s\n' "$archived_root/${run_id}-${ts}"
+
+git worktree prune

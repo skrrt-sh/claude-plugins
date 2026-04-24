@@ -1,0 +1,61 @@
+{
+  "skill_name": "squad",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Decompose this into subagent tasks: refactor AuthService to use a token bucket rate limiter and update the auth docs. Plan only — don't run anything.",
+      "expected_output": "A task manifest JSON with 3 tasks (ratelimit library, auth integration, docs update). Disjoint target_files. Validation command on each. Library and docs are named subagents; auth integration is a fork (tightly coupled to AuthService context). Manifest is written to .claude/squad/runs/<run-id>/manifest.json.",
+      "files": [],
+      "skill": "squad:decompose"
+    },
+    {
+      "id": 2,
+      "prompt": "This is a single-file typo fix. Decompose it for squad.",
+      "expected_output": "The agent refuses and says this is a single-agent task. No manifest is written.",
+      "files": [],
+      "skill": "squad:decompose"
+    },
+    {
+      "id": 3,
+      "prompt": "Spawn the manifest at .claude/squad/runs/auth-rate-limit-2026-04-24/manifest.json.",
+      "expected_output": "Creates worktrees via scripts/create-worktrees.sh, creates squad/<run-id>/integration branch without switching, dispatches children in parallel tool-call blocks per dependency group with cwd pointing at each worktree, collects child returns (squad.child-return.v1 shape), switches to integration, cherry-picks commits in merge order, runs validation gate between tasks, cleans up worktrees on success. Never pushes. Prints 'Integration branch ready: ... Run /ship:commit to ship.'",
+      "files": [],
+      "skill": "squad:spawn"
+    },
+    {
+      "id": 4,
+      "prompt": "Spawn this manifest — two tasks both edit src/auth/service.ts with no dependency between them.",
+      "expected_output": "Detects the shared writable file in the same dispatch group, refuses before dispatching, tells the user to re-run /squad:decompose to sequence the tasks via dependencies.",
+      "files": [],
+      "skill": "squad:spawn"
+    },
+    {
+      "id": 5,
+      "prompt": "Spawn the manifest with --auto-resolve.",
+      "expected_output": "On cherry-pick conflict, the agent invokes /squad:resolver <run-id> <task-a> <task-b> (runs as a fork), waits for it to stage the resolved files, then git cherry-pick --continue and runs the validation gate.",
+      "files": [],
+      "skill": "squad:spawn"
+    },
+    {
+      "id": 6,
+      "prompt": "Orchestrate the full squad flow for: add a helper, add a smoke test, update the README.",
+      "expected_output": "Invokes /squad:decompose, stops at one checkpoint showing the manifest summary, on approval invokes /squad:spawn run:<run-id>, and ends with the integration-branch-ready message pointing at /ship:commit.",
+      "files": [],
+      "skill": "squad:orchestrate"
+    },
+    {
+      "id": 7,
+      "prompt": "Orchestrate this goal but only plan — don't create worktrees or spawn.",
+      "expected_output": "Treats the phrasing as --dry-run, invokes /squad:decompose, prints the manifest summary, exits cleanly without worktrees or dispatch.",
+      "files": [],
+      "skill": "squad:orchestrate"
+    },
+    {
+      "id": 8,
+      "prompt": "Set up squad in this repo.",
+      "expected_output": "Detects CLAUDE.md (or creates it), appends the block from skills/setup/block.md between <!-- skrrt:squad --> markers (or replaces between markers), automatically adds .claude/squad/ to .gitignore, writes CLAUDE_CODE_FORK_SUBAGENT=1 to .claude/settings.local.json, and notes whether /ship is installed for the downstream ship step.",
+      "files": [],
+      "skill": "squad:setup"
+    }
+  ]
+}

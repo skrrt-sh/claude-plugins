@@ -25,6 +25,14 @@
       "source": "./plugins/ship",
       "category": "developer-workflow",
       "keywords": ["git", "github", "gitlab", "conventional-commits", "gitmoji", "pull-request", "release"]
+    },
+    {
+      "name": "squad",
+      "description": "Decompose, fan out, and merge: squad plans a multi-subagent run, dispatches forked or named children in isolated git worktrees, and cherry-picks their commits onto an integration branch ready for /ship:commit",
+      "version": "0.1.0",
+      "source": "./plugins/squad",
+      "category": "developer-workflow",
+      "keywords": ["subagents", "multi-agent", "worktree", "orchestration", "fork", "task-decomposition", "fan-out"]
     }
   ]
 }

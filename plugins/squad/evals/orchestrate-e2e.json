@@ -1,0 +1,14 @@
+{
+  "skills": ["squad:orchestrate", "squad:decompose", "squad:spawn"],
+  "query": "Orchestrate the full squad flow for: add a helper to hooks/utils.sh, add a smoke test, and mention the helper in README.md.",
+  "expected_behavior": [
+    "Invokes /squad:decompose, produces a 3-task manifest with disjoint target_files",
+    "Stops at one checkpoint showing the manifest summary",
+    "On approval invokes /squad:spawn run:<run-id>",
+    "Creates three worktrees, dispatches children in parallel where dependencies permit",
+    "Cherry-picks each child's commits onto squad/<run-id>/integration in merge_order, runs validation gates between tasks",
+    "On full success, auto-cleans up worktrees (no --keep-worktrees flag)",
+    "Ends with 'Integration branch ready: squad/<run-id>/integration. Run /ship:commit to ship.'",
+    "Never runs git push, git reset --hard, or git commit --amend"
+  ]
+}

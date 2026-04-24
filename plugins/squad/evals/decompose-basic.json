@@ -1,0 +1,13 @@
+{
+  "skills": ["squad:decompose"],
+  "query": "Decompose this: add a rate limiter library, wire AuthService into it, and update the auth docs.",
+  "expected_behavior": [
+    "Picks a pipeline pattern (auth-integration depends on ratelimit-lib output)",
+    "Drafts 3 tasks with disjoint writable target_files",
+    "Picks fork for tightly-coupled work (auth-integration with AuthService context) and named for self-contained work (library, docs)",
+    "Every task has a validation_command",
+    "auth-integration has a dependencies edge on ratelimit-lib",
+    "Writes the manifest to .claude/squad/runs/<run-id>/manifest.json",
+    "Prints a summary table; does not spawn or create worktrees"
+  ]
+}

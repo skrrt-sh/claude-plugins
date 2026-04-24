@@ -1,209 +1,282 @@
 ---
 name: spawn
-description: Dispatches subagents per a squad task manifest, collects their structured returns, and cherry-picks their commits onto a `squad/<run-id>/integration` branch with per-task validation gates. Use when the agent needs to execute a squad plan, fan out subagents, run the children from a manifest, or merge child branches into one reviewable integration branch. Trigger for phrases like "spawn the subagents", "fan out the children", "execute the squad plan", "run the manifest", "dispatch the children and merge them", "/spawn".
-argument-hint: "<run:<run-id> | <manifest-path> <worktree-map-path>> [--auto-resolve]"
-user-invocable: true
+description: Executes a squad task manifest end-to-end. Creates isolated worktrees per task, dispatches child subagents (fork or named) in parallel tool-call blocks, collects their structured returns, cherry-picks their commits onto a `squad/<run-id>/integration` branch in merge order, runs per-task validation gates, and cleans up on success. This is the "implement" step in explore/plan/implement. Make sure to use this skill whenever the user asks to spawn subagents, fan out children, execute a squad plan, run a task manifest, dispatch children and cherry-pick their work, fan out and merge, or run a multi-agent job end-to-end — even if they don't say the word "spawn". Ends at an integration branch and hands off to /ship:commit.
+argument-hint: "<run:<run-id> | <manifest-path>> [--auto-resolve] [--keep-worktrees]"
+allowed-tools: Read Write Edit Bash(git *) Bash(jq *) Bash(bash scripts/*)
 ---
 
 # Squad Spawn Skill
 
-> Skill instructions for executing a squad manifest end-to-end: fan out
-> children, collect their structured returns, cherry-pick their commits
-> onto an integration branch, and run per-task validation gates.
+> The "implement" step of squad. Creates worktrees, dispatches children,
+> cherry-picks their commits onto an integration branch with validation
+> gates between them. Ends at a commit-ready branch; never pushes.
 
-You are an orchestrator. You dispatch child subagents, you wait for their
-structured returns, you replay their commits sequentially onto a staging
-branch, and you escalate on conflicts instead of silently resolving. You
-never push, never reset --hard, never amend. You end at "integration
-branch ready" and hand off to `/commit`.
+You are an orchestrator. You hand each child a crisp prompt and a
+worktree, wait for its structured return, cherry-pick its commits onto
+a staging branch, and run the task's validation command before the next
+child lands. You do not push, amend, or reset --hard.
 
-## Additional Resources
-
-- [reference/child-prompt-template.md](reference/child-prompt-template.md)
-  — the exact prompt structure each child receives (objective, output
-  format, tool guidance, boundaries)
-- [reference/return-contract.md](reference/return-contract.md) — the
-  `squad.child-return.v1` shape and why every field matters
-- [reference/integration-strategy.md](reference/integration-strategy.md)
-  — why we cherry-pick (not rebase), replay ordering, conflict handling
-- Claude Code sub-agents:
-  <https://docs.claude.com/en/docs/claude-code/sub-agents>
-- Anthropic multi-agent research system:
-  <https://www.anthropic.com/engineering/multi-agent-research-system>
-
-## Input Modes
+## Inputs
 
 `$ARGUMENTS` selects the mode:
 
-- `run:<run-id>` — resolves manifest + map from
-  `.claude/squad/runs/<run-id>/{manifest.json,worktree-map.json}`.
-- `<manifest-path> <worktree-map-path>` — two explicit paths, space
-  separated.
+- `run:<run-id>` — loads the manifest from
+  `.claude/squad/runs/<run-id>/manifest.json`.
+- `<manifest-path>` — explicit path.
 
-Optional flag anywhere in `$ARGUMENTS`:
+Flags (anywhere in `$ARGUMENTS`):
 
-- `--auto-resolve` — on cherry-pick conflict, dispatch a named
-  `squad-resolver` subagent instead of pausing for the user. Requires the
-  profile to exist in `.claude/agents/squad-resolver.md`; otherwise this
-  skill falls back to pause-and-ask with a warning.
+- `--auto-resolve` — on cherry-pick conflict, dispatch the
+  `/squad:resolver` skill (runs as a fork). Without the flag, pause and
+  ask the user.
+- `--keep-worktrees` — do not cleanup worktrees after a successful run.
+  Default is auto-cleanup on success.
 
 ## Workflow
 
-1. **Load and validate inputs.** Read the manifest and worktree map.
-   Validate each against its schema in `../../templates/`. Refuse on
-   schema errors or mismatched `run_id`.
-2. **Create the integration branch.** `git switch -c
-   squad/<run-id>/integration <base_ref>` from the parent checkout. If it
-   already exists (e.g. from a prior spawn), refuse — the user must
-   `/worktree cleanup:<run-id>` first or rename the prior run.
-3. **Compute dispatch groups.** Kahn-style topological grouping of tasks
-   by `dependencies`: group 0 is all tasks with no deps; group N is all
-   tasks whose deps are satisfied by groups 0..N-1. Respect
-   `SQUAD_MAX_PARALLEL` (default 4) per group by splitting oversize
-   groups into sequential waves.
-4. **Dispatch each group in one turn.** Use the Agent tool with multiple
-   tool-call blocks in a single assistant message, one per child. Each
-   call uses:
-   - `subagent_type: <named-profile-name>` for named children (per
-     task's `named_subagent_profile`).
-   - Fork children are dispatched via the fork mechanism
-     (`CLAUDE_CODE_FORK_SUBAGENT=1` must be set in the session —
-     `templates/claude-settings.json` sets it). If fork is unsupported
-     in the current runtime, refuse and tell the user.
-   - `isolation: worktree` when the task has `worktree: true`, with
-     `cwd` pointing at the worktree path from the map.
-   - The prompt body from
-     [reference/child-prompt-template.md](reference/child-prompt-template.md)
-     with every placeholder filled in from the task. Include the
-     required return shape inline.
-5. **Collect returns.** Each child writes its return JSON to
-   `.claude/squad/runs/<run-id>/returns/<task-id>.json` and the Agent
-   tool result should echo it back. Validate each against
-   `../../templates/child-return.schema.json`.
-6. **Retry on malformed returns.** If a child's return fails validation,
-   dispatch it a second time with the schema error attached to the
-   prompt. On a second failure, mark that task `status: failed` and
-   continue with other tasks.
-7. **Replay.** Run `scripts/replay-children.sh <run-id>`. This script
-   iterates tasks in ascending `merge_order` (dependencies used as
-   tiebreakers), fetches each child's branch into
-   `refs/squad-incoming/<run-id>/<task-id>`, cherry-picks every commit
-   listed in that task's return, and runs the validation gate between
-   tasks.
-8. **Conflict escalation.**
-   - **Default (no flag):** the replay script exits non-zero with the
-     conflicting paths in stderr. Pause, print `git diff --name-only
-     --diff-filter=U`, print both children's `summary` and
-     `notes_for_orchestrator`, and wait for the user to resolve.
-   - **`--auto-resolve`:** dispatch a named `squad-resolver` with a
-     tight objective: "resolve these N unmerged paths by preserving the
-     intent of both children's summaries; run the validation command;
-     return a `squad.child-return.v1` with the resolving commit."
-9. **Write the run summary.** Emit
-   `.claude/squad/runs/<run-id>/squad-run.json` with per-task status,
-   replay outcome, cherry-picked commits, validation results, and any
-   failed tasks.
-10. **Print the final message.** Name the integration branch, summarize
-    the run in one table, and tell the user:
-    `Integration branch ready: squad/<run-id>/integration. Run /commit to
-    ship.`
-11. **Never cleanup automatically.** Worktrees stay; cleanup is the
-    user's explicit next step via `/worktree cleanup:<run-id>`.
+### 1. Load and validate
 
-## Child Dispatch — per-task rules
+- Read the manifest. Reject if task `id`s are not unique (important:
+  the downstream map keys by id).
+- Reject if the parent checkout is dirty (`git status --porcelain`
+  must be empty). A dirty parent can't be reproduced into worktrees
+  reliably.
+- For each `named` task, verify `.claude/agents/<profile>.md` exists.
+  Refuse for the whole run if any profile is missing.
+- **Fork preflight.** Squad requires `CLAUDE_CODE_FORK_SUBAGENT=1` in
+  the session env — it's what lets the plugin dispatch fork subagents
+  at all, and `/squad:setup` writes it unconditionally to
+  `.claude/settings.local.json`. Check it here. If unset, refuse with:
+  `CLAUDE_CODE_FORK_SUBAGENT=1 is not set in this session — run
+  /squad:setup, then reopen this Claude Code session so the env var
+  is picked up.` Apply this check even if the manifest is all-named:
+  the resolver runs as a fork and you may need it under
+  `--auto-resolve`.
+- **Absolute run-dir.** Compute
+  `RUN_DIR = "$(git rev-parse --show-toplevel)/.claude/squad/runs/<run-id>"`
+  once. Pass this absolute path into every child prompt so children
+  running in worktrees (cwd = worktree path) can still write their
+  returns into the main checkout.
 
-- **Fork** (`subagent_type: fork`) inherits the parent's conversation,
-  prompt cache, tools, and model. Use when the task needs deep parent
-  context or when siblings dispatched in the same turn can share the
-  cache. Forks cannot be safely backgrounded for arbitrary work — run
-  foregrounded.
-- **Named** (`subagent_type: named`) with `named_subagent_profile =
-  <name>` dispatches using `.claude/agents/<name>.md`. If the profile is
-  missing, refuse for that task. Named children run with their
-  pre-approved tools; unknown tools auto-deny when backgrounded.
-- **Worktree isolation** attaches the child to the worktree in the map
-  entry. The child's cwd is the worktree path; it sees a clean checkout
-  at the task's branch.
-- **Shared cwd** (no worktree) means the child runs in the parent's
-  checkout. The parent checkout must be idle (no uncommitted changes)
-  before spawn proceeds — enforced at step 2.
+### 2. Create worktrees
 
-Every child receives, per the Anthropic multi-agent research post:
+Run:
 
-1. **Objective** — the task's `title` + `rationale`.
-2. **Output format** — the `squad.child-return.v1` schema verbatim.
-3. **Tool guidance** — the task's `allowed_tools` list + an explicit
-   refusal instruction for tools outside it.
-4. **Boundaries** — the `target_files` list with `read_only` flags, and
-   an explicit instruction not to touch any file not in the list.
-5. **Validation** — the task's `validation_command`; the child must run
-   it and include the result in `tests_run`.
+```bash
+bash "${CLAUDE_SKILL_DIR}/scripts/create-worktrees.sh" <manifest-path>
+```
 
-## Integration Strategy — summary
+The script creates `<repo-parent>/<repo>-worktrees/<run-id>/<task-id>`
+per task with a `squad/<run-id>/<task-id>` branch from `base_ref`,
+applies `worktree.symlinkDirectories` and `worktree.sparsePaths` from
+`.claude/settings.json` if set, ensures the
+`.claude/squad/runs/<run-id>/returns/` directory exists (children write
+their return JSON there), writes
+`.claude/squad/runs/<run-id>/worktree-map.json`, and prints the map.
+The `<run-id>` segment in the worktree path keeps concurrent runs with
+shared task ids (`docs`, `tests`, `frontend`) from colliding.
 
-Full rationale in
-[reference/integration-strategy.md](reference/integration-strategy.md).
+### 3. Create the integration branch — do not switch yet
 
-- Staging branch: `squad/<run-id>/integration`, cut from `base_ref`.
-- Replay order: ascending `merge_order`, `dependencies` as tiebreak.
-- Replay method: `git cherry-pick` per commit in each child's
-  `commits[]`. Never `git rebase` — rebase rewrites the child's history
-  and makes partial-failure recovery ugly.
-- Validation gate runs after each child's commits are picked.
-- Children with `status != "done"` are skipped, not aborted — the
-  integration branch keeps the successful children.
+```bash
+git branch "squad/<run-id>/integration" "<base_ref>"
+```
 
-## Git Command Subset
+This creates the ref without changing HEAD. Dispatch happens while the
+parent checkout is still on whatever branch the user started from.
+Switching early would let any shared-cwd child contaminate integration
+(we don't have shared-cwd tasks in v0.1.0, but the ordering matters).
 
-Stay within this subset:
+### 4. Dispatch children in groups
 
-- `git status --short`
-- `git diff --name-only [--diff-filter=U]`
-- `git diff --stat`
-- `git log --oneline -n <n>`
-- `git rev-parse --verify <ref>`
-- `git switch -c squad/<run-id>/integration <base_ref>`
-- `git switch squad/<run-id>/integration`
-- `git fetch <worktree_path> <branch>:refs/squad-incoming/<run-id>/<task-id>`
-- `git cherry-pick <sha>`
-- `git cherry-pick --abort`
-- `git cherry-pick --continue`
-- `git update-ref refs/squad-incoming/<run-id>/<task-id>` (for pruning)
-- `git branch --list 'squad/*'`
+Compute dispatch groups by Kahn's algorithm on `dependencies`:
+- Group 0: tasks with no deps.
+- Group N: tasks whose deps are all in groups 0..N-1.
+- Cap at `SQUAD_MAX_PARALLEL` (default 4); split oversize groups into
+  sequential waves.
 
-Never use: `git push`, `git reset --hard`, `git commit --amend`, `git
-rebase -i`, `git worktree remove --force`, `git clean`.
+For each group, dispatch every child in **one assistant turn** using
+parallel tool-call blocks. Each dispatch:
 
-## Requirements
+- Uses `subagent_type: <named-profile>` for named tasks (from the
+  manifest).
+- For fork tasks, uses the fork mechanism (requires
+  `CLAUDE_CODE_FORK_SUBAGENT=1` — set by `/squad:setup` into
+  `.claude/settings.local.json`).
+- Passes `cwd: <worktree_path>` (from the worktree map) — squad-managed
+  isolation. Do **not** set `isolation: worktree` on the dispatch call;
+  that field makes Claude create its own ephemeral worktree and would
+  bypass our branch naming.
+- Passes the prompt template below, with placeholders filled from the
+  task.
 
-- `git` 2.35+ on PATH.
-- `jq` on PATH for the replay script.
-- Manifest + worktree map both exist and share the same `run_id`.
-- `CLAUDE_CODE_FORK_SUBAGENT=1` in the session if any task is
-  `subagent_type: fork`.
-- For `--auto-resolve`, a named `squad-resolver` profile must exist in
-  `.claude/agents/` of the consumer project.
+### Child prompt template
+
+```
+# Objective
+
+<task.title>
+
+<task.rationale>
+
+# Output format
+
+When you finish, write a JSON document to
+`<RUN_DIR>/returns/<task.id>.json` (absolute path — do not interpret
+relative to your cwd, which is the worktree) with this shape:
+
+{
+  "task_id": "<task.id>",
+  "status": "done | blocked | failed",
+  "summary": "<1–3 sentences, plain English, imperative>",
+  "commits": [{"sha": "<7–40 hex>", "subject": "<commit subject>"}],
+  "validation_result": {"command": "<the validation cmd>", "exit_code": <int>},
+  "blockers": [{"kind": "missing-dep|conflict|spec-unclear|validation-failed",
+                "detail": "<what's wrong>"}]
+}
+
+Rules:
+- If status is `done`, `commits` must be non-empty and `blockers` must be empty.
+- If status is `blocked` or `failed`, `blockers` must be non-empty.
+- Echo the same JSON in your final message so I can see it too.
+
+# Tools
+
+You may use: <task.allowed_tools joined by ", ">.
+Refuse any tool outside that list.
+
+# Boundaries
+
+Edit only these files:
+<task.target_files bulleted list>
+
+Do not touch any file outside that list. If the task requires it, stop
+and return `status: blocked` with a `spec-unclear` blocker.
+
+# Validation
+
+Before returning `status: done`, run:
+
+  <task.validation_command>
+
+Record the exit code in `validation_result.exit_code`. If it's non-zero,
+return `status: blocked` with a `validation-failed` blocker — do not
+mark the task done.
+
+# Commit
+
+Make one or more commits on your current branch before returning. List
+each sha + subject in `commits[]`. I'll cherry-pick these in
+`merge_order`. You may use /ship:commit if available, or write the
+commit directly.
+
+# Context
+
+- run_id: <manifest.run_id>
+- cwd: <worktree_path>  (a git worktree; commit here on this branch)
+- RUN_DIR: <absolute path to .claude/squad/runs/<run-id>/ in the main checkout>
+- merge_order: <task.merge_order>
+- dependencies: <task.dependencies>
+```
+
+### 5. Collect and validate returns
+
+After the group completes, read each
+`.claude/squad/runs/<run-id>/returns/<task-id>.json`. Check the
+consistency rules (done → non-empty commits + empty blockers;
+blocked/failed → non-empty blockers). If a return is missing or
+contradictory, re-dispatch that child once with the error attached. On
+a second failure, mark the task `failed` and continue with the others.
+
+### 6. Switch to integration, then cherry-pick
+
+Once every dispatched child has returned:
+
+```bash
+git switch "squad/<run-id>/integration"
+```
+
+Then, for each task with `status: done` in dependency order (ascending
+`merge_order` as tiebreak, alphabetical `id` as final tiebreak):
+
+```bash
+git fetch "<worktree_path>" "<branch_name>:refs/squad-incoming/<run-id>/<task-id>"
+for sha in <task.commits[].sha>; do
+  git cherry-pick "$sha"  # on conflict → see §7
+done
+bash -c "<task.validation_command>"   # validation gate
+```
+
+If the validation gate exits non-zero, stop. Don't revert the already-
+picked commits. Write a run summary (next step) and tell the user.
+
+Tasks with `status != done` are **skipped** — their commits stay on
+their own branches, the integration branch does not include them.
+
+### 7. Conflict handling
+
+**Default mode (no `--auto-resolve`):**
+- Abort: `git cherry-pick --abort`.
+- Print `git diff --name-only --diff-filter=U`, the two conflicting
+  tasks' `summary` + any `blockers` notes.
+- Stop and ask the user to resolve manually, or to re-run `/squad:decompose`
+  sequencing the tasks via `dependencies`.
+
+**`--auto-resolve` mode:**
+- Do not abort. Leave the conflicted state in the working tree.
+- Invoke `/squad:resolver <run-id> <task-a-id> <task-b-id>` — it runs
+  as a forked subagent, edits the unmerged files to preserve both
+  intents, and `git add`s each resolved file. The resolver does not
+  commit.
+- When the resolver returns, run `git cherry-pick --continue`, then
+  run the task's validation command as a gate, and continue the loop.
+- If `/squad:resolver` itself can't resolve cleanly (semantic conflict),
+  fall back to the default mode.
+
+### 8. Run summary
+
+Write `.claude/squad/runs/<run-id>/squad-run.json`:
+
+```json
+{
+  "run_id": "<id>",
+  "base_ref": "<sha>",
+  "integration_branch": "squad/<id>/integration",
+  "tasks": [
+    {"id": "<task-id>", "outcome": "picked|skipped|conflict|validation-failed",
+     "picked_commits": ["<sha>..."], "validation": "pass|fail|skipped"}
+  ]
+}
+```
+
+### 9. Cleanup + final message
+
+On full success (every task `picked` or intentionally `skipped`, gates
+green): unless `--keep-worktrees`, run
+`bash "${CLAUDE_SKILL_DIR}/scripts/cleanup-worktrees.sh" <run-id>` to
+remove the worktrees and their squad-prefixed branches. Archives the
+run dir to `.claude/squad/runs/_archived/<run-id>-<timestamp>/`.
+
+On partial failure: leave the worktrees intact so the user can inspect.
+Point them at the run summary.
+
+Print one line:
+```
+Integration branch ready: squad/<run-id>/integration. Run /ship:commit to ship.
+```
 
 ## Guardrails
 
-- Refuse if manifest and map disagree on `run_id` or task set.
-- Refuse if a `named` task's `named_subagent_profile` is not installed.
-- Refuse if the parent checkout has uncommitted changes before step 2.
-- Refuse if two parallel tasks in the same dispatch group share any
-  non-read-only `target_files` — this is a manifest bug; tell the user
-  to re-run `/decompose`.
-- On a malformed child return, retry exactly once; then mark failed and
-  continue. Do not retry forever.
-- On a cherry-pick conflict with no `--auto-resolve`, always pause and
-  ask. Never silently resolve.
-- On partial failure, leave the integration branch intact. Write
-  `squad-run.json` with the outcome. Never delete the integration
-  branch.
-- Worktrees are **not** cleaned up by this skill. `/worktree
-  cleanup:<run-id>` is the explicit next step (recommended after
-  `/commit`).
-- Never push. Never amend. Never rewrite history. Never invent test
-  results.
+- Never push. Never `git reset --hard`. Never `git commit --amend`.
+  Never `git rebase -i`.
+- Never cherry-pick from a branch outside `squad/<run-id>/*`.
+- Never delete branches outside the `squad/` prefix.
+- Always abort (or preserve under `--auto-resolve`) on conflict — never
+  attempt to silently resolve.
+- Every retry (malformed return, resolver) is one-shot. Don't loop.
+- Manifest + map must agree on `run_id` and task set; refuse otherwise.
+- On partial failure, leave the integration branch intact. The
+  `squad-run.json` records what happened.
 
 ## Task
 

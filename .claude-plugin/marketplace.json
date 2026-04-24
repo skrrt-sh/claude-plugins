@@ -28,7 +28,7 @@
     },
     {
       "name": "squad",
-      "description": "Orchestrate multi-agent work: decompose tasks, spawn forked or named subagents in optional worktrees, and merge onto a commit-ready integration branch",
+      "description": "Decompose, fan out, and merge: squad plans a multi-subagent run, dispatches forked or named children in isolated git worktrees, and cherry-picks their commits onto an integration branch ready for /ship:commit",
       "version": "0.1.0",
       "source": "./plugins/squad",
       "category": "developer-workflow",

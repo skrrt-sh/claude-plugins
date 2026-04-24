@@ -1,8 +1,8 @@
 [
   { "query": "orchestrate the full squad flow on this goal", "should_trigger": true },
   { "query": "plan and fan out subagents end to end", "should_trigger": true },
-  { "query": "run decompose then worktree then spawn", "should_trigger": true },
-  { "query": "/orchestrate add rate limiter to auth service", "should_trigger": true },
+  { "query": "run decompose then spawn", "should_trigger": true },
+  { "query": "/squad:orchestrate add rate limiter to auth service", "should_trigger": true },
   { "query": "do the whole squad pipeline --yes", "should_trigger": true },
   { "query": "just spawn one subagent", "should_trigger": false },
   { "query": "open a PR", "should_trigger": false },

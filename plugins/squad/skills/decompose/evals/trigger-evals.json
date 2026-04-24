@@ -4,7 +4,7 @@
   { "query": "plan a fan-out for adding a rate limiter and updating the docs", "should_trigger": true },
   { "query": "split this work across forked and named subagents", "should_trigger": true },
   { "query": "build a task manifest for the schema rewrite", "should_trigger": true },
-  { "query": "/decompose redesign the billing flow", "should_trigger": true },
+  { "query": "/squad:decompose redesign the billing flow", "should_trigger": true },
   { "query": "what is a subagent", "should_trigger": false },
   { "query": "just commit this change", "should_trigger": false },
   { "query": "open a PR for the current branch", "should_trigger": false },

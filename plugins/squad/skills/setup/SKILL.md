@@ -1,100 +1,130 @@
 ---
 name: setup
-description: Adds the squad plugin's multi-agent orchestration block to the current project's CLAUDE.md or AGENTS.md so agents know when to use /decompose, /worktree, /spawn, and /orchestrate. Use when the user wants to install the squad plugin's instructions into a project, set up squad in this repo, or configure multi-agent orchestration routing. Trigger for phrases like "set up squad", "install squad in this project", "add the squad block to CLAUDE.md", "configure multi-agent orchestration", "wire squad into my agent instructions".
+description: Installs squad into the current project. Appends the squad block to CLAUDE.md (or AGENTS.md), adds `.claude/squad/` to .gitignore so per-run artifacts stay local, and writes `CLAUDE_CODE_FORK_SUBAGENT=1` to .claude/settings.local.json (squad requires this for fork subagents — mandatory, not optional). Make sure to use this skill whenever the user asks to set up squad, install squad, add squad to CLAUDE.md, wire the squad plugin into this repo, or configure multi-agent orchestration — even if they don't say the word "setup".
 argument-hint: "[options]"
-user-invocable: true
+allowed-tools: Read Write Edit Bash(git check-ignore *) Bash(ls *)
 ---
 
 # Squad Setup Skill
 
-> Appends the squad orchestration block to the current project's agent
-> instruction file so that agents know when to decompose, fan out, and
-> merge multi-subagent work.
-
-You are a setup helper. Your job is to detect the project's agent
-instruction file and append the squad configuration block between
-`<!-- skrrt:squad -->` / `<!-- /skrrt:squad -->` markers. You do not
-modify content outside the block.
+> One-shot project install for the squad plugin. Idempotent.
 
 ## Workflow
 
-1. **Detect the instruction file.** Check for these files in the project
-   root, in order:
-   - `CLAUDE.md`
-   - `AGENTS.md`
-   - `.claude/CLAUDE.md`
-   - `.github/AGENTS.md`
+### 1. Install the instruction block
 
-   If none exist, create `CLAUDE.md` in the project root with a top-level
-   heading and then proceed.
+Detect the project's agent instruction file in this order:
+`CLAUDE.md`, `AGENTS.md`, `.claude/CLAUDE.md`, `.github/AGENTS.md`. If
+none exist, create `CLAUDE.md` at the project root.
 
-2. **Check for the squad marker.** Look for the exact line
-   `<!-- skrrt:squad -->` in the detected file.
+The canonical block lives at `${CLAUDE_SKILL_DIR}/block.md` — read it
+verbatim. It contains its own `<!-- skrrt:squad -->` /
+`<!-- /skrrt:squad -->` markers.
 
-3. **Append or replace the block.** Read the contents of
-   `../../templates/squad-claude-block.md` (relative to this skill).
-   That file already contains the full block wrapped in
-   `<!-- skrrt:squad -->` and `<!-- /skrrt:squad -->` markers.
+- **Marker present** in the target file: replace content between
+  markers with the current block.
+- **Marker absent:** append a blank line then the block.
 
-   - **Marker not present:** append a blank line and then the block at
-     the end of the file.
-   - **Marker present:** replace everything between `<!-- skrrt:squad -->`
-     and `<!-- /skrrt:squad -->` (inclusive) with the current block
-     contents. Do not modify any line outside those markers.
+Never modify content outside the markers.
 
-4. **Suggest a gitignore entry.** If the consumer repo has a `.gitignore`
-   and it does not include `.claude/squad/`, print a one-line suggestion:
-   `Suggest adding '.claude/squad/' to .gitignore — squad's run artifacts
-   (manifests, worktree maps, child returns) should stay local.` Do not
-   modify `.gitignore` automatically.
+### 2. Gitignore the runtime artifacts
 
-5. **Report the ship dependency.** Squad ends at an integration branch
-   ready for `/commit`. Print a note confirming whether the ship plugin
-   is present (look for `plugins/ship/` in the repo if it's a skrrt-labs
-   checkout, or for the `/commit` skill being available). If ship isn't
-   detected, suggest installing it so the user has a shipping path.
+Every squad run writes to `.claude/squad/runs/<run-id>/` (manifests,
+worktree maps, child returns, run summaries). This is per-project
+session state — short-lived, machine-local, not shareable.
 
-6. **Print what you did.** Name the file that was changed, whether the
-   block was appended or replaced, and the gitignore / ship notes.
+Ensure the project's root `.gitignore` includes `.claude/squad/`:
 
-## Block source
+- If `.gitignore` doesn't exist: create it with `.claude/squad/` as the
+  only line.
+- If `.gitignore` exists and already ignores `.claude/squad/`
+  (check with `git check-ignore -q .claude/squad/anything` returning 0,
+  or grep for the pattern): skip.
+- Otherwise: append a commented section and the pattern. Do not
+  reformat or sort existing entries.
 
-The block is stored verbatim in
-`../../templates/squad-claude-block.md`. It contains:
+Example append:
 
-- The `/decompose`, `/worktree`, `/spawn`, `/orchestrate`, and `/setup`
-  command index.
-- The fork vs named vs worktree decision matrix.
-- The "parallelize only when all hold" rules.
-- A glossary of Anthropic's subagent terminology (fork, named subagent,
-  worktree isolation) with doc URLs.
-- A "when NOT to use squad" note citing Anthropic's multi-agent research
-  post.
+```
+# skrrt squad — per-run artifacts (manifests, worktree maps, child returns)
+.claude/squad/
+```
 
-Do not inline the block into this SKILL.md — keep the template as the
-single source of truth so updates to the template flow through.
+This step is automatic — don't ask.
 
-## File Handling Rules
+### 3. Enable fork subagents (mandatory)
 
-- Preserve the existing file's leading content exactly. Only touch the
-  squad block region.
-- Preserve trailing newlines — if the file didn't end in a newline, add
-  one before the block; otherwise append directly.
-- Do not reformat or rewrap surrounding markdown.
-- Do not bump any other plugin's version or modify their blocks.
+Squad **requires** `CLAUDE_CODE_FORK_SUBAGENT=1` in the session
+environment. Every squad run uses forks directly (manifests with
+`subagent_type: fork`) or indirectly (the `/squad:resolver` skill runs
+as a fork under `--auto-resolve`). Without the env var, dispatch fails
+and the plugin does not work. This step is not optional and not
+prompted.
+
+Write the key unconditionally:
+
+- Read `.claude/settings.local.json` (create `{}` if absent — preserve
+  everything else in the file).
+- Ensure `env.CLAUDE_CODE_FORK_SUBAGENT = "1"`. If the key is already
+  set to `"1"`, skip the write. If it's set to any other value,
+  overwrite with `"1"` and note the change in the report.
+- Never write this key to `.claude/settings.json` (team-shared); only
+  to `.claude/settings.local.json` (per-user, gitignored by
+  convention).
+
+Tell the user: the env var is picked up when Claude Code reads
+`settings.local.json` on session start. If they're already in a
+session, they need to reopen it before `/squad:spawn` will see the
+flag.
+
+### 4. Check the ship plugin is available
+
+`/squad:spawn` ends at an integration branch and hands off to
+`/ship:commit`. If the ship plugin isn't installed, users will hit a
+dead end.
+
+Check whether a `/ship:commit` skill is reachable. The skrrt
+convention installs plugins under a marketplace root — inspect the
+consumer repo's plugin roots for `ship/skills/commit/SKILL.md`, and
+also check the running marketplace at common plugin dirs
+(`~/.claude/plugins/`, `./plugins/ship/`). If none found, emit a
+clearly-flagged warning (not an error):
+
+```
+warning: skrrt ship plugin not detected. /squad:spawn ends at an
+integration branch expecting /ship:commit to turn it into a clean
+commit series. Install the ship plugin from the same marketplace:
+https://github.com/skrrt-sh/skills
+```
+
+Do not fail setup over this — the user may have their own commit
+workflow. Just surface it loudly once.
+
+### 5. Report
+
+Print one summary:
+- Instruction file: `<path>` (appended | replaced | created)
+- Gitignore: added `.claude/squad/` | already ignored
+- Fork subagents (`CLAUDE_CODE_FORK_SUBAGENT=1`): written | already
+  set | overwritten from `<old value>`
+- Ship plugin: detected at `<path>` | not detected (warning shown)
+- Reminder: if the session predates the env-var write, reopen Claude
+  Code so `/squad:spawn` sees the flag.
 
 ## Guardrails
 
-- Never modify lines outside `<!-- skrrt:squad -->` /
-  `<!-- /skrrt:squad -->`.
-- Never duplicate the block. If the marker is present, replace between
-  markers; do not append again.
-- Never modify `.gitignore` automatically — only suggest.
-- Never install agent profiles (e.g. `squad-resolver`) into
-  `.claude/agents/` — that's the user's call. Just mention the
-  `--auto-resolve` option in `/spawn` and the profile it expects.
-- If the detected file is read-only or the write fails, report the
-  failure with the exact path; do not retry with sudo or --force.
+- Only ever touch content between `<!-- skrrt:squad -->` and
+  `<!-- /skrrt:squad -->` in the instruction file.
+- Never duplicate the block — replace between markers when present.
+- Never modify `.gitignore` entries outside of appending the one
+  section. Don't reformat existing entries.
+- Never write `CLAUDE_CODE_FORK_SUBAGENT` to `.claude/settings.json`
+  (team-shared). Only to `.claude/settings.local.json` (per-user).
+- When editing `.claude/settings.local.json`, read-merge-write —
+  preserve every other key in the file.
+- Never install `.claude/agents/` profiles for the user. Squad's
+  resolver ships as a `context: fork` skill and needs no profile.
+- The ship-plugin check is advisory: warn but never fail setup.
 
 ## Task
 

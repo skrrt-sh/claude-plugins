@@ -1,0 +1,12 @@
+{
+  "skills": ["squad:spawn"],
+  "query": "Spawn the manifest at .claude/squad/runs/migration-2026-04-24/manifest.json. Two of the tasks touch src/db/models.ts in parallel.",
+  "expected_behavior": [
+    "Detects the file-ownership violation in the manifest (two parallel tasks share a non-read-only target_file)",
+    "Refuses before dispatching any child",
+    "Prints the violating task ids and the shared path",
+    "Suggests re-running /decompose so the two tasks are sequenced via a dependencies edge",
+    "Does not create the integration branch",
+    "Does not attempt to silently resolve the conflict at cherry-pick time"
+  ]
+}

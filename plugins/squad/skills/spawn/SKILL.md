@@ -41,8 +41,16 @@ Flags (anywhere in `$ARGUMENTS`):
 - Reject if the parent checkout is dirty (`git status --porcelain`
   must be empty). A dirty parent can't be reproduced into worktrees
   reliably.
-- For each `named` task, verify `.claude/agents/<profile>.md` exists.
-  Refuse for the whole run if any profile is missing.
+- For each `named` task, verify the profile resolves. Claude Code's
+  dispatcher looks it up in this priority order, so check all three
+  and accept the first hit:
+  1. Project: `<repo-root>/.claude/agents/<profile>.md`
+  2. User: `$HOME/.claude/agents/<profile>.md`
+  3. Plugin-bundled: any `agents/<profile>.md` under an enabled
+     plugin dir (commonly `$HOME/.claude/plugins/**/agents/<profile>.md`).
+  Refuse for the whole run only if no path resolves. If the project
+  file exists but a same-named user/plugin file also exists, that's
+  fine — the project entry wins at dispatch time.
 - **Fork preflight.** Squad requires `CLAUDE_CODE_FORK_SUBAGENT=1` in
   the session env — it's what lets the plugin dispatch fork subagents
   at all, and `/squad:setup` writes it unconditionally to
@@ -214,6 +222,12 @@ for sha in <task.commits[].sha>; do
 done
 bash -c "<task.validation_command>"   # validation gate
 ```
+
+The validation gate runs in the parent checkout on the integration
+branch, not in the task's worktree. If the task's validation command
+depends on sparse-checkout or symlink state that only exists inside
+the worktree, the decomposer should have chosen a command that works
+in a full checkout (or flagged the task non-parallel).
 
 If the validation gate exits non-zero, stop. Don't revert the already-
 picked commits. Write a run summary (next step) and tell the user.

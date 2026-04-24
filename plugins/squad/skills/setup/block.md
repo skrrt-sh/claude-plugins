@@ -60,8 +60,10 @@ without it. Reopen the Claude Code session after running `/squad:setup`
 so the env var is picked up.
 
 **Named** when the child needs a specialist prompt / different tools /
-fresh context. Requires `.claude/agents/<profile>.md` in the consumer
-repo; `/squad:spawn` refuses if the profile is missing.
+fresh context. The profile must resolve in one of Claude Code's agent
+lookup paths: project `.claude/agents/`, user `~/.claude/agents/`, or
+any enabled plugin's bundled `agents/` dir. `/squad:spawn` refuses
+only if none of those resolve.
 
 **Parallel** (same dispatch group) when tasks share no writable paths,
 no mutual `dependencies`, and each has its own `validation_command`.

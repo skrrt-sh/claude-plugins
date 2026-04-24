@@ -75,10 +75,12 @@ across siblings dispatched in the same turn.
 
 **Named when:** child needs a specialist prompt or different tools;
 well-specified self-contained work (docs, tests, code-gen); you want
-fresh context to avoid parent drift. The profile must exist in the
-consumer's `.claude/agents/<name>.md` — `/squad:spawn` will refuse if
-it's missing, so if the ideal profile doesn't exist, use `fork` and
-note the desired profile in `rationale`.
+fresh context to avoid parent drift. The profile must resolve in one
+of Claude Code's agent paths — project `.claude/agents/<name>.md`,
+user `~/.claude/agents/<name>.md`, or any enabled plugin's bundled
+`agents/<name>.md`. `/squad:spawn` refuses only if none resolve.
+If the ideal profile doesn't exist anywhere, use `fork` and note the
+desired profile in `rationale`.
 
 **Parallel when:** tasks share no writable paths, no mutual
 dependencies, each has its own validation command.

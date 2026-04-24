@@ -34,9 +34,12 @@ Canonical terminology comes from Anthropic's docs:
 
 ## Pitfalls
 
-- **Named without a profile.** A named task must reference an existing
-  `.claude/agents/<name>.md`. If the profile is missing, `/squad:spawn`
-  refuses. If the ideal profile doesn't exist yet, fall back to `fork`
+- **Named without a profile.** A named task must resolve to an existing
+  agent definition in one of Claude Code's lookup paths — project
+  `.claude/agents/<name>.md`, user `~/.claude/agents/<name>.md`, or any
+  enabled plugin's bundled `agents/<name>.md`. Project wins over user,
+  user wins over plugin. `/squad:spawn` refuses only when none resolve.
+  If the ideal profile doesn't exist anywhere yet, fall back to `fork`
   and note the profile you'd want in the task's `rationale` — the user
   can author it later.
 - **Fork + backgrounding.** Anthropic's docs warn that forks can use

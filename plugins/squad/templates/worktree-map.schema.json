@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://skrrt.sh/schemas/squad/worktree-map/v1",
+  "title": "Squad Worktree Map",
+  "description": "Output of /worktree; input to /spawn. Maps each task_id to its isolated worktree location and branch.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "map_version",
+    "run_id",
+    "parent_repo",
+    "entries",
+    "shared_cwd_tasks"
+  ],
+  "properties": {
+    "map_version": { "const": "1" },
+    "run_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*[a-z0-9]$"
+    },
+    "parent_repo": { "type": "string", "minLength": 1 },
+    "entries": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z0-9][a-z0-9-]*[a-z0-9]$": { "$ref": "#/$defs/entry" }
+      }
+    },
+    "shared_cwd_tasks": {
+      "type": "array",
+      "items": { "type": "string" },
+      "uniqueItems": true
+    }
+  },
+  "$defs": {
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "worktree_path",
+        "branch_name",
+        "base_ref",
+        "worktreeinclude_applied",
+        "symlinks",
+        "copied_files",
+        "cleanup_policy",
+        "created_at"
+      ],
+      "properties": {
+        "worktree_path": { "type": "string", "minLength": 1 },
+        "branch_name": {
+          "type": "string",
+          "pattern": "^squad/[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*[a-z0-9]$"
+        },
+        "base_ref": { "type": "string", "minLength": 1 },
+        "worktreeinclude_applied": { "type": "boolean" },
+        "symlinks": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "copied_files": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "cleanup_policy": { "enum": ["on-success", "on-merge", "manual"] },
+        "created_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}

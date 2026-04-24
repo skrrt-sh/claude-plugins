@@ -1,0 +1,8 @@
+{
+  "name": "squad",
+  "description": "Decompose a task, fan out to forked or named subagents in optional git worktrees, and merge results onto a commit-ready integration branch",
+  "version": "0.1.0",
+  "author": {
+    "name": "skrrt-labs"
+  }
+}

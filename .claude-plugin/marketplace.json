@@ -25,6 +25,14 @@
       "source": "./plugins/ship",
       "category": "developer-workflow",
       "keywords": ["git", "github", "gitlab", "conventional-commits", "gitmoji", "pull-request", "release"]
+    },
+    {
+      "name": "squad",
+      "description": "Orchestrate multi-agent work: decompose tasks, spawn forked or named subagents in optional worktrees, and merge onto a commit-ready integration branch",
+      "version": "0.1.0",
+      "source": "./plugins/squad",
+      "category": "developer-workflow",
+      "keywords": ["subagents", "multi-agent", "worktree", "orchestration", "fork", "task-decomposition", "fan-out"]
     }
   ]
 }

@@ -2,7 +2,7 @@
 name: spawn
 description: Executes a squad task manifest end-to-end. Creates isolated worktrees per task, dispatches child subagents (fork or named) in parallel tool-call blocks, collects their structured returns, cherry-picks their commits onto a `squad/<run-id>/integration` branch in merge order, runs per-task validation gates, and cleans up on success. This is the "implement" step in explore/plan/implement. Make sure to use this skill whenever the user asks to spawn subagents, fan out children, execute a squad plan, run a task manifest, dispatch children and cherry-pick their work, fan out and merge, or run a multi-agent job end-to-end — even if they don't say the word "spawn". Ends at an integration branch and hands off to /ship:commit.
 argument-hint: "<run:<run-id> | <manifest-path>> [--auto-resolve] [--keep-worktrees]"
-allowed-tools: Read Write Edit Bash(git *) Bash(jq *) Bash(bash scripts/*)
+allowed-tools: Read Write Edit Bash(git *) Bash(jq *) Bash(bash *)
 ---
 
 # Squad Spawn Skill

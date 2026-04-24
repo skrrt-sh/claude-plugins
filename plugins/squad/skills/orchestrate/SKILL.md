@@ -2,6 +2,7 @@
 name: orchestrate
 description: End-to-end squad run. Invokes /squad:decompose, pauses at a single checkpoint, then invokes /squad:spawn. The chained wrapper for explore/plan/implement. Make sure to use this skill whenever the user wants to run the whole pipeline on one goal, plan and fan out end-to-end, orchestrate a multi-agent job, decompose and then spawn in one shot, or run the squad pipeline — even if they don't say the word "orchestrate".
 argument-hint: "<goal> [--yes] [--dry-run] [--auto-resolve] [--keep-worktrees]"
+allowed-tools: Read Bash(jq *)
 ---
 
 # Squad Orchestrate Skill

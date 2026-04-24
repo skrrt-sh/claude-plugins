@@ -53,7 +53,7 @@
     {
       "id": 8,
       "prompt": "Set up squad in this repo.",
-      "expected_output": "Detects CLAUDE.md (or creates it), appends the block from templates/squad-claude-block.md between <!-- skrrt:squad --> markers (or replaces between markers), suggests adding .claude/squad/ to .gitignore, and notes whether /ship is installed for the downstream ship step.",
+      "expected_output": "Detects CLAUDE.md (or creates it), appends the block from skills/setup/block.md between <!-- skrrt:squad --> markers (or replaces between markers), automatically adds .claude/squad/ to .gitignore, writes CLAUDE_CODE_FORK_SUBAGENT=1 to .claude/settings.local.json, and notes whether /ship is installed for the downstream ship step.",
       "files": [],
       "skill": "squad:setup"
     }

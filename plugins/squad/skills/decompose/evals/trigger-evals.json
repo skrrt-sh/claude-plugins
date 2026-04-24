@@ -1,0 +1,12 @@
+[
+  { "query": "decompose this refactor into parallel subagent tasks", "should_trigger": true },
+  { "query": "break the auth migration into a squad manifest", "should_trigger": true },
+  { "query": "plan a fan-out for adding a rate limiter and updating the docs", "should_trigger": true },
+  { "query": "split this work across forked and named subagents", "should_trigger": true },
+  { "query": "build a task manifest for the schema rewrite", "should_trigger": true },
+  { "query": "/decompose redesign the billing flow", "should_trigger": true },
+  { "query": "what is a subagent", "should_trigger": false },
+  { "query": "just commit this change", "should_trigger": false },
+  { "query": "open a PR for the current branch", "should_trigger": false },
+  { "query": "run the tests", "should_trigger": false }
+]

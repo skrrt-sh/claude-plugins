@@ -47,14 +47,16 @@ Before choosing a commit message, read:
 
 ## Branch Guard
 
-This is a hard pre-flight gate. Before staging, before writing a commit message, before
+This is a hard pre-flight gate enforced by agent adherence to this skill — not by a
+script or hook. Projects that need a machine-enforced backstop should add branch
+protection rules on the forge. Before staging, before writing a commit message, before
 anything that mutates git state:
 
 1. Run `git branch --show-current`.
 2. Compare the result to the configured branching strategy (see below).
 3. If the current branch is protected or wrong for this work:
    - Fetch the latest remote state: `git fetch origin`.
-   - Ensure `main` is up to date locally: `git switch main && git pull origin main`.
+   - Ensure `main` is up to date locally: `git switch main && git pull --ff-only origin main`.
    - Create a new short-lived branch from fresh `main`: `git switch -c <type>/<description>`.
 4. Only after the branch is correct may you stage files or write the commit.
 
@@ -177,6 +179,16 @@ that looked active an hour ago may have been merged and deleted by the forge.
    scope:
    - GitHub: `gh pr list --state all --limit 10 --json number,title,state,headRefName,mergedAt,closedAt`
    - GitLab: `glab mr list --state all --per-page 10`
+
+   Match a candidate to the user's report by (in priority order):
+   1. Keyword overlap between the user's description and the PR title or branch name
+      (e.g., "login redirect" matches `fix/login-redirect` or a PR titled "Fix login
+      redirect loop").
+   2. Files mentioned in the report overlapping the PR's changed files
+      (`gh pr view <n> --json files -q '.files[].path'`).
+   3. Recency — prefer PRs merged or closed within the last few days over older ones.
+   If two or more candidates are plausible after this scoring, stop and ask the user
+   which PR they mean. Never guess.
 2. Run `gh pr view <number> --json state,headRefName,mergedAt,closedAt` (GitHub) or
    `glab mr view <number>` (GitLab) to check whether the precedent PR is open, merged, or
    closed without merge.
@@ -186,11 +198,14 @@ that looked active an hour ago may have been merged and deleted by the forge.
    updates with `git pull --ff-only origin <source-branch>`, then commit the fix. The push
    will update the existing PR. Do not open a new one.
 
-   **PR was merged** — the source branch is almost certainly gone on the remote. Do all of
-   the following, in order, before staging any file:
-   1. `git switch main`
+   **PR was merged** — the source branch is almost certainly gone on the remote. Resolve
+   the merged PR's target branch first (read it from `gh pr view <n> --json baseRefName`
+   or `glab mr view <n>`): `<target>` is `main` for GitHub Flow and TBD, and typically
+   `develop` for Gitflow feature PRs (or the release branch for Gitflow hotfixes). Then
+   do all of the following, in order, before staging any file:
+   1. `git switch <target>`
    2. `git fetch origin --prune` (drops stale remote-tracking refs for deleted branches)
-   3. `git pull --ff-only origin main` (bring local `main` up to the merged state)
+   3. `git pull --ff-only origin <target>` (bring local `<target>` up to the merged state)
    4. `git switch -c <type>/<description>` (create a fresh short-lived branch)
    5. Re-apply the fix on the new branch, then stage and commit.
 

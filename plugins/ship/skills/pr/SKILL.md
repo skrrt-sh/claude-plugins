@@ -45,17 +45,41 @@ Only continue when `STATUS=ok`.
 
 ## Workflow
 
-1. **Check the branching strategy** — read the branching block from the agent instruction file
+1. **Pre-flight branch check (mandatory)** — run `git branch --show-current` and confirm you
+   are on the correct short-lived branch. Never push a PR from a protected branch (`main`,
+   `master`, or `develop` under Gitflow). See "Branch Guard" below.
+2. **Check for prior PR work in the same problem boundary** — if this PR is a follow-up or
+   fix related to a recent PR, run the PR follow-up check in "PR Follow-Up" below before
+   pushing. A merged or closed precedent PR means the current branch may be stale and you
+   must create a fresh one from an up-to-date `main`.
+3. **Check the branching strategy** — read the branching block from the agent instruction file
    (see "Branching Strategy Awareness" below). Determine the correct target branch before
    proceeding. If no block is found, tell the user to run `/setup` and stop.
-2. Run the forge detection script.
-3. Check the current branch and remote tracking. Validate the current branch is appropriate
+4. Run the forge detection script.
+5. Check the current branch and remote tracking. Validate the current branch is appropriate
    for the configured strategy (e.g., not `main` for GitHub Flow/TBD, not a feature branch
    targeting `main` for Gitflow).
-4. Push with upstream if needed.
-5. Summarize the diff before writing the PR or MR.
-6. Use the matched CLI to create or update the review request non-interactively, using
+6. Push with upstream if needed.
+7. Summarize the diff before writing the PR or MR.
+8. Use the matched CLI to create or update the review request non-interactively, using
    `--base` or `--target-branch` with the strategy-determined target.
+
+## Branch Guard
+
+This is a hard pre-flight gate enforced by agent adherence to this skill — not by a
+script or hook. Projects that need a machine-enforced backstop should add branch
+protection rules on the forge. Before `git push` or any forge CLI command:
+
+1. Run `git branch --show-current`.
+2. Compare the result to the configured branching strategy (see below).
+3. If the current branch is protected or wrong for this work:
+   - `git fetch origin`
+   - `git switch main && git pull --ff-only origin main`
+   - `git switch -c <type>/<description>`
+4. Only after the branch is correct may you push or open the PR.
+
+Never push from a protected branch with a plan to "fix the branch later" — once pushed,
+the remote history is visible to reviewers and CI.
 
 ## Git Command Subset
 
@@ -69,7 +93,11 @@ Stay within this `git` subset unless the user explicitly asks for more:
 - `git remote get-url origin`
 - `git push -u origin HEAD`
 - `git log --oneline --decorate -n <count>`
+- `git log origin/<branch>..HEAD` (pre-push sanity check)
+- `git fetch origin` (pre-flight to refresh remote state)
+- `git fetch origin --prune` (drop stale remote-tracking refs for deleted branches)
 - `git pull origin <branch>` (for syncing with the target branch)
+- `git pull --ff-only origin <branch>` (safe fast-forward sync; preferred over plain pull)
 - `git switch -c <branch>` (for creating branches when the strategy requires it)
 - `git switch <branch>` (for switching to an existing branch)
 - `git pull --rebase origin <branch>` (GitHub Flow / TBD only — for rebasing before PR)
@@ -235,21 +263,53 @@ To list open PRs across repos for cross-referencing, the following commands are 
 
 ## PR Follow-Up
 
-When the user reports problems after a PR was already created, check the PR state before
-making any changes:
+When the user reports a problem in the **same problem boundary** as a recent PR — even if
+they do not name the PR — verify the precedent PR's state *before* pushing or opening
+anything new. Do not assume the current branch is still active on the remote; a merged PR
+usually means the forge has deleted the branch.
 
-1. Run `gh pr view --json state` (GitHub) or `glab mr view` (GitLab) to determine whether
-   the PR is open, merged, or closed.
-2. **PR is still open** — stay on (or switch to) the PR's source branch, commit fixes using
-   `/commit`, and push. The existing PR updates automatically. Do not create a new PR.
-3. **PR was merged** — switch to `main`, run `git pull origin main`, create a new short-lived
-   branch from the updated `main`, apply fixes, and open a new PR using this skill. Do not
-   attempt to reuse a branch that the forge already deleted after merge.
-4. **PR was closed without merge** — stop and ask the user whether to reopen the existing
-   branch or start a fresh one.
+1. Identify the precedent PR. If the user does not name it, inspect recent PRs:
+   - GitHub: `gh pr list --state all --limit 10 --json number,title,state,headRefName,mergedAt,closedAt`
+   - GitLab: `glab mr list --state all --per-page 10`
 
-If the agent is on `main` when the user references a PR problem, identify the PR's source
-branch and switch to it before committing (for open PRs).
+   Match a candidate to the user's report by (in priority order):
+   1. Keyword overlap between the user's description and the PR title or branch name.
+   2. Files mentioned in the report overlapping the PR's changed files
+      (`gh pr view <n> --json files -q '.files[].path'`).
+   3. Recency — prefer PRs merged or closed within the last few days over older ones.
+   If two or more candidates are plausible after this scoring, stop and ask the user
+   which PR they mean. Never guess.
+2. Run `gh pr view <number> --json state,headRefName,mergedAt,closedAt` (GitHub) or
+   `glab mr view <number>` (GitLab) to determine whether the PR is open, merged, or closed.
+3. Branch on the state:
+
+   **PR is still open** — stay on (or switch to) the PR's source branch. Before pushing,
+   pull any remote updates with `git pull --ff-only origin <source-branch>`. Commit fixes
+   with `/commit` and push. The existing PR updates automatically. Do not create a new PR.
+
+   **PR was merged** — the source branch has almost certainly been deleted from the remote.
+   Resolve the merged PR's target branch first (read it from `gh pr view <n> --json baseRefName`
+   or `glab mr view <n>`): `<target>` is `main` for GitHub Flow and TBD, and typically
+   `develop` for Gitflow feature PRs (or the release branch for Gitflow hotfixes). Then
+   follow this exact sequence, in order:
+   1. `git switch <target>`
+   2. `git fetch origin --prune`
+   3. `git pull --ff-only origin <target>`
+   4. `git switch -c <type>/<description>` (fresh short-lived branch from updated `<target>`)
+   5. Apply fixes on the new branch, commit with `/commit`, push with `-u origin HEAD`.
+   6. Open a new PR with this skill targeting `<target>`. Reference the merged PR in the
+      body when useful.
+
+   Never reuse a branch whose PR was already merged.
+
+   **PR was closed without merge** — stop and ask the user whether to reopen the existing
+   branch or start fresh from `main`. Do not guess.
+
+4. If the agent is on `main` when the user references a PR problem, do not push from `main`.
+   Apply the rules above first.
+
+**Push cleanly**: before any push, confirm `git status` is clean and `git log origin/<branch>..HEAD`
+shows only the intended commits. Do not push stray commits carried over from another task.
 
 ## Guardrails
 

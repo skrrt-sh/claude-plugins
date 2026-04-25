@@ -1,7 +1,7 @@
 {
   "name": "squad",
-  "description": "Plan, fan out, merge: decompose a goal, dispatch forked or named subagents in isolated git worktrees, cherry-pick their commits onto an integration branch",
-  "version": "0.1.0",
+  "description": "Multi-agent fan-out for one big task. /squad:spawn splits a goal into N independent pieces, dispatches one subagent per piece via Agent + isolation:worktree, cherry-picks committed work onto an integration branch ready for /ship:commit. User-invocable only; rare-case tool, not a default.",
+  "version": "0.2.0",
   "author": {
     "name": "skrrt-labs",
     "email": "hello@skrrt.sh"

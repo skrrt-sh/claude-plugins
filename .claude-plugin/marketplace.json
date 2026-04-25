@@ -28,8 +28,8 @@
     },
     {
       "name": "squad",
-      "description": "Decompose, fan out, and merge: squad plans a multi-subagent run, dispatches forked or named children in isolated git worktrees, and cherry-picks their commits onto an integration branch ready for /ship:commit",
-      "version": "0.1.0",
+      "description": "Multi-agent fan-out for one big task. /squad:spawn splits a goal into N independent pieces, dispatches one subagent per piece via Agent + isolation:worktree, cherry-picks committed work onto an integration branch ready for /ship:commit. User-invocable only; rare-case tool, not a default.",
+      "version": "0.2.0",
       "source": "./plugins/squad",
       "category": "developer-workflow",
       "keywords": ["subagents", "multi-agent", "worktree", "orchestration", "fork", "task-decomposition", "fan-out"]

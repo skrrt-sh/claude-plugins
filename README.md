@@ -155,6 +155,48 @@ Merge it into your project's `.claude/settings.json` if you want:
 This plugin also includes lightweight evaluation fixtures under [`plugins/ship/evals`](plugins/ship/evals)
 to support the Anthropic recommendation to test skills against representative scenarios before sharing them.
 
+### squad
+
+Run N subagents in parallel for one big task. Splits the goal into independent pieces, dispatches one Agent per piece in its own auto-managed git worktree, cherry-picks committed work onto an integration branch ready for `/ship:commit`.
+
+> **Rare-case tool.** Worktrees + parallel dispatch are overhead. Reach for squad only when a task is genuinely large AND cleanly splits into independent substantial pieces. Most tasks don't need it — just do them directly.
+
+```bash
+/plugin install squad@skrrt-plugins
+```
+
+**Features:**
+
+- Single skill: `/squad:spawn <goal>` plans, checkpoints, runs.
+- Decomposes into N≥2 sibling tasks with disjoint writable files — refuses pipelines and single-file work.
+- Dispatches all children in one assistant turn via parallel Agent tool calls with `isolation: "worktree"` (Claude Code manages the worktrees).
+- Cherry-picks each `done` child's commits onto `squad/<id>/integration` directly from the returned branches.
+- Cleans up source worktrees and branches after successful integration.
+- No on-disk state — the conversation is the source of truth.
+- **User-invocable only** (`disable-model-invocation: true`) — Claude will not auto-trigger squad from natural-language requests; you invoke `/squad:spawn` and `/squad:setup` explicitly.
+
+**Recommended first step — run `/squad:setup`:**
+
+Setup adds the multi-agent block to your project's `CLAUDE.md` and writes `CLAUDE_CODE_FORK_SUBAGENT=1` to `.claude/settings.local.json` (required for fork dispatch on Claude Code v2.1.117+). Reopen Claude Code afterward so the env var is picked up.
+
+```text
+/squad:setup
+```
+
+**Usage:**
+
+```text
+/squad:spawn refactor AuthService to use a token bucket rate limiter, update the auth docs, and add a smoke test
+```
+
+After spawn finishes, the integration branch is ready — use `/ship:commit` then `/ship:pr` to land it.
+
+**When NOT to use squad:**
+
+- Single-file edits — just do them.
+- Pipelines / ordered tasks — squad is fan-out, not orchestration.
+- Tightly-coupled work where children would conflict on the same files.
+
 ## Requirements
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) v1.0.33+
@@ -183,42 +225,53 @@ to support the Anthropic recommendation to test skills against representative sc
 │   │   │       └── SKILL.md
 │   │   ├── package.json
 │   │   └── package-lock.json
-│   └── ship/                      # Commit, PR or MR, and release workflow plugin
+│   ├── ship/                      # Commit, PR or MR, and release workflow plugin
+│   │   ├── .claude-plugin/
+│   │   │   └── plugin.json
+│   │   ├── evals/
+│   │   │   ├── commit-basic.json
+│   │   │   ├── evals.json
+│   │   │   ├── pr-github.json
+│   │   │   └── release-changelog.json
+│   │   ├── templates/
+│   │   │   └── claude-settings.json
+│   │   └── skills/
+│   │       ├── commit/
+│   │       │   ├── SKILL.md
+│   │       │   ├── evals/
+│   │       │   │   └── trigger-evals.json
+│   │       │   └── reference/
+│   │       │       ├── commit-types.md
+│   │       │       └── gitmojis.md
+│   │       ├── pr/
+│   │       │   ├── SKILL.md
+│   │       │   ├── evals/
+│   │       │   │   └── trigger-evals.json
+│   │       │   └── scripts/
+│   │       │       └── detect-forge-cli.sh
+│   │       ├── release/
+│   │       │   ├── SKILL.md
+│   │       │   ├── evals/
+│   │       │   │   └── trigger-evals.json
+│   │       │   └── scripts/
+│   │       │       └── detect-forge-cli.sh
+│   │       └── setup/
+│   │           ├── SKILL.md
+│   │           ├── evals/
+│   │           │   └── trigger-evals.json
+│   │           └── reference/
+│   │               └── branching-strategies.md
+│   └── squad/                     # Multi-agent fan-out plugin
 │       ├── .claude-plugin/
 │       │   └── plugin.json
 │       ├── evals/
-│       │   ├── commit-basic.json
-│       │   ├── evals.json
-│       │   ├── pr-github.json
-│       │   └── release-changelog.json
-│       ├── templates/
-│       │   └── claude-settings.json
+│       │   └── evals.json
 │       └── skills/
-│           ├── commit/
+│           ├── setup/
 │           │   ├── SKILL.md
-│           │   ├── evals/
-│           │   │   └── trigger-evals.json
-│           │   └── reference/
-│           │       ├── commit-types.md
-│           │       └── gitmojis.md
-│           ├── pr/
-│           │   ├── SKILL.md
-│           │   ├── evals/
-│           │   │   └── trigger-evals.json
-│           │   └── scripts/
-│           │       └── detect-forge-cli.sh
-│           ├── release/
-│           │   ├── SKILL.md
-│           │   ├── evals/
-│           │   │   └── trigger-evals.json
-│           │   └── scripts/
-│           │       └── detect-forge-cli.sh
-│           └── setup/
-│               ├── SKILL.md
-│               ├── evals/
-│               │   └── trigger-evals.json
-│               └── reference/
-│                   └── branching-strategies.md
+│           │   └── block.md
+│           └── spawn/
+│               └── SKILL.md
 ├── README.md
 ├── LICENSE
 ├── skills-lock.json
@@ -246,9 +299,9 @@ Use the skill-creator to test changes against the eval suites:
 /skill-creator audit our skills, run evals
 ```
 
-Eval workspaces (`md-writer-workspace/`, `ship-workspace/`) are gitignored —
-they are runtime artifacts from running evals, not committed. The eval
-definitions themselves live in `plugins/*/evals/`.
+Eval workspaces (`md-writer-workspace/`, `ship-workspace/`, `squad-workspace/`)
+are gitignored — they are runtime artifacts from running evals, not committed.
+The eval definitions themselves live in `plugins/*/evals/`.
 
 ### Project Layout for Dev Files
 
@@ -257,6 +310,7 @@ definitions themselves live in `plugins/*/evals/`.
 skills-lock.json          # Lockfile for dev skills (committed)
 md-writer-workspace/      # md-writer eval artifacts (gitignored)
 ship-workspace/           # ship eval artifacts (gitignored)
+squad-workspace/          # squad eval artifacts (gitignored)
 ```
 
 ## License

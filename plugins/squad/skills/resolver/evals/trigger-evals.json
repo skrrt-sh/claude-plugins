@@ -1,6 +1,0 @@
-[
-  { "query": "resolve the cherry-pick conflict between task-a and task-b", "should_trigger": false },
-  { "query": "fix the merge conflict", "should_trigger": false },
-  { "query": "help me resolve a git conflict", "should_trigger": false },
-  { "query": "/squad:resolver run-abc task-a task-b", "should_trigger": false }
-]

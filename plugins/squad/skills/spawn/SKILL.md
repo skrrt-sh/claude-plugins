@@ -132,7 +132,8 @@ Integration branch ready: squad/<id>/integration. Run /ship:commit to ship.
 - Never push, `--force`, `--hard`, `--amend`, `rebase -i`.
 - Never cherry-pick from a branch you didn't get back from your own Agent dispatch this run.
 - Only delete a Claude-managed worktree/branch after you successfully cherry-picked from it. Never touch unpicked ones.
-- One retry per child. No automatic conflict resolution.
+- Retry a child at most once, only when its return JSON is missing or self-contradictory (e.g. `done` with empty `commits`). Never retry on `blocked` / `failed` with a valid return — those need user intervention. The retried branch supersedes the original for cherry-pick purposes; leave the original worktree alone.
+- No automatic conflict resolution.
 - Refuse on: dirty parent, missing `CLAUDE_CODE_FORK_SUBAGENT=1`, unresolved named profile.
 
 ## Task

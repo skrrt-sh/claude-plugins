@@ -157,6 +157,8 @@ to support the Anthropic recommendation to test skills against representative sc
 
 ### squad
 
+> **Requires Claude Code v2.1.117+** (squad uses `CLAUDE_CODE_FORK_SUBAGENT=1` and the Agent tool's `isolation: "worktree"` parameter, both introduced in that release).
+
 Run N subagents in parallel for one big task. Splits the goal into independent pieces, dispatches one Agent per piece in its own auto-managed git worktree, cherry-picks committed work onto an integration branch ready for `/ship:commit`.
 
 > **Rare-case tool.** Worktrees + parallel dispatch are overhead. Reach for squad only when a task is genuinely large AND cleanly splits into independent substantial pieces. Most tasks don't need it — just do them directly.
